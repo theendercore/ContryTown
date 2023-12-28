@@ -7,7 +7,6 @@ import eu.pb4.sgui.api.elements.*
 import eu.pb4.sgui.api.gui.SimpleGui
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.minecraft.enchantment.Enchantments
-import net.minecraft.entity.boss.BossBar
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.screen.ScreenHandlerType
@@ -191,26 +190,26 @@ object TestCommand {
             }
 
 
-            val textXKey = Key.of("test_x");
+            val textXKey = Key.of("test_x")
             provider.removeMarker(textXKey)
 
             val rect = Marker.rectangle(Point.of(-100.0, -150.0), Point.of(-200.0, -250.0)).markerOptions(
                 MarkerOptions.builder().hoverTooltip("Big Wall of text. Lorem Ipsum")
-            );
-            provider.addMarker(textXKey, rect);
+            )
+            provider.addMarker(textXKey, rect)
 
             val p1 = Point.of(100.0, 150.0)
             val p2 = Point.of(90.0, 250.0)
             val p4 = Point.of(200.0, 140.0)
             val p3 = Point.of(200.0, 250.0)
-            val polyKey = Key.of("poly");
+            val polyKey = Key.of("poly")
             provider.removeMarker(polyKey)
 
             val poly = Marker.polygon(p1, p2, p3, p4).markerOptions(
                 MarkerOptions.builder().hoverTooltip("<b>Big Text</b>\nSome more Text")
                     .fillColor(Color.RED)
-            );
-            provider.addMarker(polyKey, poly);
+            )
+            provider.addMarker(polyKey, poly)
 
 //            updateClaims(c.source.server, api)
 
@@ -275,7 +274,7 @@ object TestCommand {
 
                 val layerId = Key.of("test_render")
                 if (!world.layerRegistry().hasEntry(layerId)) world.layerRegistry().register(layerId, provider)
-val xc = map.value.stream.toList()
+               val xc = map.value.stream.toList()
                 map.value.stream.flatMap { it.stream }.toList().forEach {
                     provider.removeMarker(id)
                     println("render : $id - $it")
