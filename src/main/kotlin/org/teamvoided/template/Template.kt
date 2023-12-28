@@ -1,17 +1,21 @@
 package org.teamvoided.template
 
+
 import net.minecraft.util.Identifier
 import org.slf4j.LoggerFactory
+import org.teamvoided.template.commands.TestCommand
+
 
 @Suppress("unused")
 object Template {
     const val MODID = "template"
 
     @JvmField
-    val LOGGER = LoggerFactory.getLogger(Template::class.java)
+    val LOGGER = LoggerFactory.getLogger(Template::class.simpleName)
 
     fun commonInit() {
         LOGGER.info("Hello from Common")
+        TestCommand.init()
     }
 
     fun clientInit() {
@@ -19,4 +23,6 @@ object Template {
     }
 
     fun id(path: String) = Identifier(MODID, path)
+
+
 }
