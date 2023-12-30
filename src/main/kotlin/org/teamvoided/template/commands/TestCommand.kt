@@ -12,14 +12,11 @@ import net.minecraft.item.Items
 import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.screen.slot.Slot
 import net.minecraft.screen.slot.SlotActionType
-import net.minecraft.server.MinecraftServer
 import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Style
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
-import org.apache.commons.lang3.StringUtils
-import xaero.pac.common.server.api.OpenPACServerAPI
 import xyz.jpenilla.squaremap.api.*
 import xyz.jpenilla.squaremap.api.marker.Marker
 import xyz.jpenilla.squaremap.api.marker.MarkerOptions
@@ -31,17 +28,23 @@ object TestCommand {
     fun init() {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             val testNode = literal("qtest").build()
-            val inbuiltNode = literal("inbuilt").executes(this::test).build()
+            val inbuiltGuiNode = literal("inbuilt_gui").executes(this::test).build()
             val mapTestNode = literal("map_test").executes(this::mapTest).build()
+            val flanNode = literal("flan").executes(this::flanTest).build()
 
             dispatcher.root.addChild(testNode)
-            testNode.addChild(inbuiltNode)
+            testNode.addChild(inbuiltGuiNode)
             testNode.addChild(mapTestNode)
+            testNode.addChild(flanNode)
 
             val mapLinkNode = literal("map_link").executes(this::mapLink).build()
             dispatcher.root.addChild(mapLinkNode)
         }
 
+    }
+
+    private fun flanTest(c: CommandContext<ServerCommandSource>): Int{
+        return 0
     }
 
     private fun test(c: CommandContext<ServerCommandSource>): Int {
@@ -211,25 +214,6 @@ object TestCommand {
             )
             provider.addMarker(polyKey, poly)
 
-//            updateClaims(c.source.server, api)
-
-
-
-            /* OPACServerAddonRegister.EVENT.register{ server, perms, party, claims ->
-                claims.register(object :IClaimsManagerListenerAPI{
-                    override fun onWholeRegionChange(identifier: Identifier, i: Int, i1: Int) {}
-
-                    override fun onChunkChange(
-                        identifier: Identifier, i: Int, i1: Int, iPlayerChunkClaimAPI: IPlayerChunkClaimAPI?
-                    ) {
-
-                    }
-
-                    override fun onDimensionChange(identifier: Identifier) {}
-                })
-
-            }
-             */
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -243,51 +227,4 @@ object TestCommand {
     }
 
 
-    private fun updateClaims(server: MinecraftServer, api: Squaremap) {
-        OpenPACServerAPI.get(server).serverClaimsManager.playerInfoStream.forEach { claimInfo ->
-            var name = claimInfo.claimsName!!
-            val id: Key
-            if (StringUtils.isBlank(name)) {
-                name = claimInfo.playerUsername.lowercase()
-                println(name)
-
-                if (name.length > 2 && name[0] == '"' && name[name.length - 1] == '"') {
-                    name = name.substring(1, name.length - 1)
-                    id = Key.of(name)
-                    name += " claim"
-                } else {
-                    id = Key.of(name)
-                    name += "'s claim"
-                }
-            } else {
-                id = Key.of(name)
-            }
-            val displayName = name
-
-            for (map in claimInfo.stream) {
-                println("Claim:")
-                val world =
-                    api.getWorldIfEnabled(WorldIdentifier.parse(map.key.toString())).orElse(null) ?: break
-
-                val provider = SimpleLayerProvider.builder("Test Render")
-                    .showControls(true).defaultHidden(false).layerPriority(5).zIndex(250).build()
-
-                val layerId = Key.of("test_render")
-                if (!world.layerRegistry().hasEntry(layerId)) world.layerRegistry().register(layerId, provider)
-               val xc = map.value.stream.toList()
-                map.value.stream.flatMap { it.stream }.toList().forEach {
-                    provider.removeMarker(id)
-                    println("render : $id - $it")
-                    provider.addMarker(
-                        id, Marker.rectangle(
-                            Point.of(it.endX.toDouble(), it.endZ.toDouble()),
-                            Point.of(it.startX.toDouble(), it.startZ.toDouble())
-                        ).markerOptions(MarkerOptions.builder().hoverTooltip(displayName))
-                    )
-                }
-
-
-            }
-        }
-    }
 }
