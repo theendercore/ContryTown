@@ -8,7 +8,6 @@ import xyz.jpenilla.squaremap.api.SimpleLayerProvider
 import xyz.jpenilla.squaremap.api.SquaremapProvider
 import xyz.jpenilla.squaremap.api.marker.Marker
 import xyz.jpenilla.squaremap.api.marker.MarkerOptions
-import xyz.jpenilla.squaremap.api.marker.Rectangle
 import java.awt.Color
 
 
@@ -42,25 +41,32 @@ object SquaremapIntegrations {
 
     fun addSettlementMarker(settlement: Settlement) {
         if (markerLayers.isEmpty()) return
-//        Use polygons instead
-//        val points = mutableListOf<Point>()
+        val points = mutableListOf<Point>()
         settlement.chunks.forEach { pos ->
-            val marker: Rectangle = Marker.rectangle(
-                Point.of(pos.startX.toDouble(), pos.startZ.toDouble()),
-                Point.of(pos.endX.toDouble(), pos.endZ.toDouble())
-            )
-            marker.markerOptions(
-                MarkerOptions.builder().hoverTooltip(settlement.name).strokeColor(Color.YELLOW).strokeOpacity(0.8)
-                    .strokeWeight(3).fillColor(Color.YELLOW).fillOpacity(0.2).build()
-            )
-            markerLayers[settlement.dimension.toString()]!!.addMarker(
-                Key.of(settlement.formatId()), marker
-            )
+            points.tryAdd(pos.getOffsetX(16), pos.startZ)
+            points.tryAdd(pos.startX, pos.startZ)
+            points.tryAdd(pos.startX, pos.getOffsetZ(16))
+            points.tryAdd(pos.getOffsetX(16), pos.getOffsetZ(16))
         }
+
+        val marker: Marker = Marker.polygon(points)
+        marker.markerOptions(
+            MarkerOptions.builder().hoverTooltip(settlement.name).strokeColor(Color.YELLOW).strokeOpacity(0.8)
+                .strokeWeight(3).fillColor(Color.YELLOW).fillOpacity(0.2).build()
+        )
+        markerLayers[settlement.dimension.toString()]!!.addMarker(
+            Key.of(settlement.formatId()), marker
+        )
     }
 
-    fun removeSettlementMarker(settlement: Settlement){
+    fun removeSettlementMarker(settlement: Settlement) {
         if (markerLayers.isEmpty()) return
         markerLayers[settlement.dimension.toString()]!!.removeMarker(Key.of(settlement.formatId()))
+    }
+
+    private fun MutableList<Point>.tryAdd(x: Int, z: Int): String {
+        val p = Point.of(x.toDouble(), z.toDouble())
+        if (this.contains(p)) this.remove(p) else this.add(p)
+        return "${p.x()}:${p.z()}"
     }
 }
