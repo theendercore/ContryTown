@@ -12,26 +12,26 @@ import net.minecraft.command.CommandSource
 import net.minecraft.command.argument.SingletonArgumentInfo
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
-import org.teamvoided.template.Template
+import org.teamvoided.template.Civilisation
 import org.teamvoided.template.data.Settlement
 import org.teamvoided.template.data.SettlementsManager
 import java.util.concurrent.CompletableFuture
 
 class SettlementArgumentType : ArgumentType<String> {
     @Throws(CommandSyntaxException::class)
-    override fun parse(stringReader: StringReader): String = stringReader.readUnquotedString()
+    override fun parse(stringReader: StringReader): String = stringReader.readQuotedString()
     override fun <S> listSuggestions(
         commandContext: CommandContext<S>, suggestionsBuilder: SuggestionsBuilder
     ): CompletableFuture<Suggestions> {
         return if (commandContext.source is CommandSource) CommandSource.suggestMatching(
-            SettlementsManager.getAllSettlement().map { it.id }, suggestionsBuilder
+            SettlementsManager.getAllSettlement().map { "\"${it.name}\"" }, suggestionsBuilder
         ) else Suggestions.empty()
     }
 
     override fun getExamples(): Collection<String> = EXAMPLES
 
     companion object {
-        private val EXAMPLES = mutableListOf("this_cool_place", "town123")
+        private val EXAMPLES = mutableListOf("This Cool place", "town 123")
         private val UNKNOWN_SETTLEMENT_EXCEPTION = DynamicCommandExceptionType {
             Text.method_54159("Settlement %s not found!", it)
         }
@@ -43,7 +43,7 @@ class SettlementArgumentType : ArgumentType<String> {
         @Throws(CommandSyntaxException::class)
         fun getSettlement(context: CommandContext<ServerCommandSource>, name: String): Settlement {
             val string = context.getArgument(name, String::class.java)
-            val settlement = SettlementsManager.getById(string)
+            val settlement = SettlementsManager.getByName(string)
             if (settlement == null) {
                 throw UNKNOWN_SETTLEMENT_EXCEPTION.create(string)
             } else {
@@ -53,7 +53,7 @@ class SettlementArgumentType : ArgumentType<String> {
 
         fun init() {
             ArgumentTypeRegistry.registerArgumentType(
-                Template.id("settlement"),
+                Civilisation.id("settlement"),
                 SettlementArgumentType::class.java,
                 SingletonArgumentInfo.contextFree(SettlementArgumentType::settlement)
             )

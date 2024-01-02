@@ -17,12 +17,13 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.world.World
 import net.minecraft.world.dimension.DimensionType
+import org.teamvoided.template.Civilisation.LOGGER
 import org.teamvoided.template.compat.WebMaps
-import org.teamvoided.template.util.Util.formatId
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
 import java.nio.file.Path
+import java.util.*
 
 
 object SettlementsManager {
@@ -32,7 +33,7 @@ object SettlementsManager {
     private val PLAYER_DATA: PlayerDataStorage<PlayerData> = JsonDataStorage("civilization", PlayerData::class.java)
 
     @OptIn(ExperimentalSerializationApi::class)
-    private val json = Json { prettyPrint = true; prettyPrintIndent = "\t" }
+    private val json = Json { prettyPrint = true; prettyPrintIndent = "  " }
 
     fun init() {
         PlayerDataApi.register(PLAYER_DATA)
@@ -42,7 +43,8 @@ object SettlementsManager {
         for (world in server.worlds) load(server, world.registryKey)
     }
 
-    fun getById(id: String): Settlement? = settlements.find { it.id == id }
+    fun getById(id: String): Settlement? = settlements.find { it.id == UUID.fromString(id) }
+    fun getByName(name: String): Settlement? = settlements.find { it.name == name }
     fun addSettlement(
         name: String, player: ServerPlayerEntity, chunkPos: ChunkPos, capitalPos: BlockPos, dimension: Identifier
     ): Pair<ResultType, Text> {
@@ -57,15 +59,9 @@ object SettlementsManager {
         if (settledChunks.contains(chunkPos)) return Pair(
             ResultType.FAIL, Text.translatable("This chunk has been settled already!")
         )
-        val possibleSettlement = getById(formatId(name))
-        if (possibleSettlement != null) return Pair(
-            ResultType.FAIL,
-            Text.translatable("A Settlement with this id already exists! Change your Settlements name!")
-        )
-
 
         val newSet = Settlement(
-            formatId(name),
+            UUID.randomUUID(),
             name,
             Settlement.SettlementType.BASE,
             mutableSetOf(leader),
@@ -93,10 +89,11 @@ object SettlementsManager {
         return Pair(ResultType.SUCCESS, Text.translatable("Chunk successfully added!"))
     }
 
-    fun updateSettlement(settlement: Settlement){
+    fun updateSettlement(settlement: Settlement) {
         val index = settlements.indexOfFirst { it.id == settlement.id }
         settlements[index] = settlement
     }
+
     fun getAllSettlement(): List<Settlement> {
         return settlements.toList()
     }
@@ -113,22 +110,18 @@ object SettlementsManager {
                     it.write(json.encodeToString(ListSerializer(Settlement.serializer()), settlements))
                 }
             } catch (e: Exception) {
-                println("Failed to save Settlements to file!")
-                e.printStackTrace()
+                LOGGER.error("Failed to save Settlements to file! \n {}", e.stackTrace)
             }
         }.start()
         Thread {
             try {
                 FileWriter(getSettledChunksSaveFile(server, world.registryKey)).use { fw ->
                     fw.write(
-                        json.encodeToString(
-                            ListSerializer(ListSerializer(Int.serializer())),
-                            settledChunks.map { listOf(it.x, it.z) })
+                        json.encodeToString(ListSerializer(Long.serializer()), settledChunks.map { it.toLong() })
                     )
                 }
             } catch (e: Exception) {
-                println("Failed to save Settled Chunks to file!")
-                e.printStackTrace()
+                LOGGER.error("Failed to save Settled Chunks to file! \n {}", e.stackTrace)
             }
         }.start()
     }
@@ -139,17 +132,15 @@ object SettlementsManager {
             settlements.clear()
             settlements.addAll(json.decodeFromString(ListSerializer(Settlement.serializer()), stringData))
         } catch (e: Exception) {
-            println("Failed to read Settlements from file")
-            e.printStackTrace()
+            LOGGER.error("Failed to read Settlements from file! \n {}", e.stackTrace)
         }
         try {
             val stringData = FileReader(getSettledChunksSaveFile(server, world)).use { it.readText() }
             settledChunks.clear()
-            settledChunks.addAll(json.decodeFromString(ListSerializer(ListSerializer(Int.serializer())), stringData)
-                .map { ChunkPos(it[0], it[1]) })
+            settledChunks.addAll(
+                json.decodeFromString(ListSerializer(Long.serializer()), stringData).map { ChunkPos(it) })
         } catch (e: Exception) {
-            println("Failed to read Settlements from file")
-            e.printStackTrace()
+            LOGGER.error("Failed to read Settlements from file! \n {}", e.stackTrace)
         }
     }
 
@@ -169,5 +160,5 @@ object SettlementsManager {
     enum class ResultType { SUCCESS, FAIL }
 
     // Country | Role
-    data class PlayerData(val citizenship: Map<String, String>)
+    data class PlayerData(val citizenship: Map<UUID, String>)
 }
