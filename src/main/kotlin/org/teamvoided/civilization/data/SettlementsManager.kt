@@ -5,7 +5,6 @@ import eu.pb4.playerdata.api.storage.JsonDataStorage
 import eu.pb4.playerdata.api.storage.PlayerDataStorage
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import net.minecraft.registry.RegistryKey
 import net.minecraft.server.MinecraftServer
@@ -29,8 +28,6 @@ import java.util.*
 
 object SettlementsManager {
     private val settlements: MutableList<Settlement> = mutableListOf()
-    private val settledChunks: MutableList<ChunkPos> = mutableListOf()
-
     private val PLAYER_DATA: PlayerDataStorage<PlayerData> = JsonDataStorage("civilization", PlayerData::class.java)
 
     @OptIn(ExperimentalSerializationApi::class)
@@ -41,11 +38,14 @@ object SettlementsManager {
     }
 
     fun postServerInit(server: MinecraftServer) {
+        LOGGER.info("Server Loaded!")
         for (world in server.worlds) load(server, world.registryKey)
     }
 
     fun getById(id: String): Settlement? = settlements.find { it.id == UUID.fromString(id) }
     fun getByName(name: String): Settlement? = settlements.find { it.nameId == name }
+
+    fun getSettledChunks(): Map<UUID, ChunkPos> = settlements.flatMap { set -> set.chunks.map { Pair(set.id, it) }.asIterable() }.toMap()
     fun addSettlement(
         name: String, player: ServerPlayerEntity, chunkPos: ChunkPos, capitalPos: BlockPos, dimension: Identifier
     ): Pair<ResultType, Text> {
@@ -57,12 +57,12 @@ object SettlementsManager {
         if (!canCreateSettlementInDim(dimension)) return Pair(
             ResultType.FAIL, Text.translatable("Can't settle in this dimension")
         )
-        if (settledChunks.contains(chunkPos)) return Pair(
+        if (getSettledChunks().containsValue(chunkPos)) return Pair(
             ResultType.FAIL, Text.translatable("This chunk has been settled already!")
         )
-
+        val id = UUID.randomUUID()
         val newSet = Settlement(
-            UUID.randomUUID(),
+            id,
             name,
             formatId(name),
             Settlement.SettlementType.BASE,
@@ -74,7 +74,6 @@ object SettlementsManager {
             dimension
         )
         settlements.add(newSet)
-        settledChunks.add(chunkPos)
 
         PlayerDataApi.setCustomDataFor(player, PLAYER_DATA, PlayerData(mapOf(Pair(newSet.id, "leader"))))
         WebMaps.addSettlement(newSet)
@@ -82,8 +81,12 @@ object SettlementsManager {
     }
 
     fun addChunk(settlement: Settlement, pos: ChunkPos): Pair<ResultType, Text> {
-        if (settledChunks.contains(pos)) return Pair(
+        if (getSettledChunks().containsValue(pos)) return Pair(
             ResultType.FAIL, Text.translatable("This chunk has been settled already!")
+        )
+        val neighbors = getChunkNeighbours(pos)
+        if (neighbors.isEmpty() || !neighbors.contains(settlement.id)) return Pair(
+            ResultType.FAIL, Text.translatable("This chunk isn't connected to any claim! try /civ outpost")
         )
         settlement.chunks.add(pos)
         updateSettlement(settlement)
@@ -98,6 +101,15 @@ object SettlementsManager {
 
     fun getAllSettlement(): List<Settlement> {
         return settlements.toList()
+    }
+
+    fun getChunkNeighbours(pos: ChunkPos): List<UUID> {
+        val neighbors: MutableList<UUID> = mutableListOf()
+        for (dir in ChunkDirection.entries) {
+            val newPos = ChunkPos(pos.x + dir.x, pos.z + dir.z)
+            if (getSettledChunks().containsValue(newPos)) neighbors.add(getSettledChunks().filterValues { it == newPos }.keys.first())
+        }
+        return neighbors
     }
 
     private fun canCreateSettlementInDim(dim: Identifier): Boolean {
@@ -115,17 +127,6 @@ object SettlementsManager {
                 LOGGER.error("Failed to save Settlements to file! \n {}", e.stackTrace)
             }
         }.start()
-        Thread {
-            try {
-                FileWriter(getSettledChunksSaveFile(server, world.registryKey)).use { fw ->
-                    fw.write(
-                        json.encodeToString(ListSerializer(Long.serializer()), settledChunks.map { it.toLong() })
-                    )
-                }
-            } catch (e: Exception) {
-                LOGGER.error("Failed to save Settled Chunks to file! \n {}", e.stackTrace)
-            }
-        }.start()
     }
 
     fun load(server: MinecraftServer, world: RegistryKey<World>) {
@@ -133,14 +134,6 @@ object SettlementsManager {
             val stringData = FileReader(getSettlementSaveFile(server, world)).use { it.readText() }
             settlements.clear()
             settlements.addAll(json.decodeFromString(ListSerializer(Settlement.serializer()), stringData))
-        } catch (e: Exception) {
-            LOGGER.error("Failed to read Settlements from file! \n {}", e.stackTrace)
-        }
-        try {
-            val stringData = FileReader(getSettledChunksSaveFile(server, world)).use { it.readText() }
-            settledChunks.clear()
-            settledChunks.addAll(
-                json.decodeFromString(ListSerializer(Long.serializer()), stringData).map { ChunkPos(it) })
         } catch (e: Exception) {
             LOGGER.error("Failed to read Settlements from file! \n {}", e.stackTrace)
         }
@@ -163,4 +156,6 @@ object SettlementsManager {
 
     // Country | Role
     data class PlayerData(val citizenship: Map<UUID, String>)
+
+    enum class ChunkDirection(val x: Int, val z: Int) { UP(0, -1), LEFT(-1, 0), DOWN(0, 1), RIGHT(1, 0) }
 }

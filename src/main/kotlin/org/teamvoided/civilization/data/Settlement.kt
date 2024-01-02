@@ -8,7 +8,6 @@ import org.teamvoided.civilization.serializers.BlockPosSerializer
 import org.teamvoided.civilization.serializers.ChunkPosSerializer
 import org.teamvoided.civilization.serializers.IdentifierSerializer
 import org.teamvoided.civilization.serializers.UUIDSerializer
-import org.teamvoided.civilization.util.Util
 import java.util.UUID
 
 @Serializable
