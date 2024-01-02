@@ -1,6 +1,6 @@
-package org.teamvoided.template.compat
+package org.teamvoided.civilization.compat
 
-import org.teamvoided.template.data.Settlement
+import org.teamvoided.civilization.data.Settlement
 
 object WebMaps {
 

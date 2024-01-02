@@ -1,4 +1,4 @@
-package org.teamvoided.template.serializers
+package org.teamvoided.civilization.serializers
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -10,6 +10,6 @@ import net.minecraft.util.math.BlockPos
 
 class BlockPosSerializer : KSerializer<BlockPos> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("block_pos", PrimitiveKind.STRING)
-    override fun serialize(encoder: Encoder, value: BlockPos) =encoder.encodeLong(value.asLong())
+    override fun serialize(encoder: Encoder, value: BlockPos) = encoder.encodeLong(value.asLong())
     override fun deserialize(decoder: Decoder): BlockPos = BlockPos.fromLong(decoder.decodeLong())
 }

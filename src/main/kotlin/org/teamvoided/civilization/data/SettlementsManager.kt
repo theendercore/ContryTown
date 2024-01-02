@@ -1,4 +1,4 @@
-package org.teamvoided.template.data
+package org.teamvoided.civilization.data
 
 import eu.pb4.playerdata.api.PlayerDataApi
 import eu.pb4.playerdata.api.storage.JsonDataStorage
@@ -17,8 +17,9 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.world.World
 import net.minecraft.world.dimension.DimensionType
-import org.teamvoided.template.Civilisation.LOGGER
-import org.teamvoided.template.compat.WebMaps
+import org.teamvoided.civilization.Civilization.LOGGER
+import org.teamvoided.civilization.compat.WebMaps
+import org.teamvoided.civilization.util.Util.formatId
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
@@ -44,7 +45,7 @@ object SettlementsManager {
     }
 
     fun getById(id: String): Settlement? = settlements.find { it.id == UUID.fromString(id) }
-    fun getByName(name: String): Settlement? = settlements.find { it.name == name }
+    fun getByName(name: String): Settlement? = settlements.find { it.nameId == name }
     fun addSettlement(
         name: String, player: ServerPlayerEntity, chunkPos: ChunkPos, capitalPos: BlockPos, dimension: Identifier
     ): Pair<ResultType, Text> {
@@ -63,6 +64,7 @@ object SettlementsManager {
         val newSet = Settlement(
             UUID.randomUUID(),
             name,
+            formatId(name),
             Settlement.SettlementType.BASE,
             mutableSetOf(leader),
             mutableSetOf(chunkPos),

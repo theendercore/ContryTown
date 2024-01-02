@@ -1,4 +1,4 @@
-package org.teamvoided.template.commands
+package org.teamvoided.civilization.commands
 
 import com.mojang.authlib.GameProfile
 import com.mojang.brigadier.context.CommandContext
@@ -19,9 +19,9 @@ import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Style
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
-import org.teamvoided.template.commands.argument.SettlementArgumentType
-import org.teamvoided.template.data.Settlement
-import org.teamvoided.template.data.SettlementsManager
+import org.teamvoided.civilization.commands.argument.SettlementArgumentType
+import org.teamvoided.civilization.data.Settlement
+import org.teamvoided.civilization.data.SettlementsManager
 import xyz.jpenilla.squaremap.api.*
 import xyz.jpenilla.squaremap.api.marker.Marker
 import xyz.jpenilla.squaremap.api.marker.MarkerOptions
@@ -120,6 +120,16 @@ object TestCommand {
         src.sendSystemMessage(results.second)
         return 1
     }
+
+
+    private fun civGUI(c: CommandContext<ServerCommandSource>): Int {
+        val src = c.source
+        val world = src.world
+        val player = src.player ?: return 0
+
+        return 1
+    }
+
 
     private fun test(c: CommandContext<ServerCommandSource>): Int {
         try {

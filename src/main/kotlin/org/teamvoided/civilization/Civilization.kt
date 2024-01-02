@@ -1,4 +1,4 @@
-package org.teamvoided.template
+package org.teamvoided.civilization
 
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
@@ -6,17 +6,17 @@ import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.Identifier
 import org.slf4j.LoggerFactory
-import org.teamvoided.template.commands.TestCommand
-import org.teamvoided.template.compat.SquaremapIntegrations
-import org.teamvoided.template.data.SettlementsManager
+import org.teamvoided.civilization.commands.TestCommand
+import org.teamvoided.civilization.compat.SquaremapIntegrations
+import org.teamvoided.civilization.data.SettlementsManager
 
 
 @Suppress("unused")
-object Template {
-    const val MODID = "template"
+object Civilization {
+    const val MODID = "civilization"
 
     @JvmField
-    val LOGGER = LoggerFactory.getLogger(Template::class.simpleName)
+    val LOGGER = LoggerFactory.getLogger(Civilization::class.simpleName)
 
     fun commonInit() {
         LOGGER.info("Hello from Common")

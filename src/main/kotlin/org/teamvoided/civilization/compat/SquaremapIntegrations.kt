@@ -1,7 +1,7 @@
-package org.teamvoided.template.compat
+package org.teamvoided.civilization.compat
 
-import org.teamvoided.template.data.Settlement
-import org.teamvoided.template.data.SettlementsManager
+import org.teamvoided.civilization.data.Settlement
+import org.teamvoided.civilization.data.SettlementsManager
 import xyz.jpenilla.squaremap.api.Key
 import xyz.jpenilla.squaremap.api.Point
 import xyz.jpenilla.squaremap.api.SimpleLayerProvider
