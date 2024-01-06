@@ -14,12 +14,10 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.WorldSavePath
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
-import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 import net.minecraft.world.dimension.DimensionType
 import org.teamvoided.civilization.Civilization.LOGGER
 import org.teamvoided.civilization.compat.WebMaps
-import org.teamvoided.civilization.util.Util.formatId
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
@@ -63,18 +61,7 @@ object SettlementsManager {
             ResultType.FAIL, Text.translatable("This chunk has been settled already!")
         )
         val id = UUID.randomUUID()
-        val newSet = Settlement(
-            id,
-            name,
-            formatId(name),
-            Settlement.SettlementType.BASE,
-            mutableSetOf(leader),
-            mutableSetOf(chunkPos),
-            capitalPos,
-            leader,
-            null,
-            dimension
-        )
+        val newSet = Settlement(id, name, leader, chunkPos, capitalPos, dimension)
         settlements.add(newSet)
 
         PlayerDataApi.setCustomDataFor(player, PLAYER_DATA, PlayerData(mapOf(Pair(newSet.id, "leader"))))
@@ -83,22 +70,28 @@ object SettlementsManager {
     }
 
     fun addChunk(settlement: Settlement, pos: ChunkPos): Pair<ResultType, Text> {
-        println(settlement)
-        println("Claim pos - $pos")
-        println("SettledChunks - ${getSettledChunks()}")
         if (getSettledChunks().contains(pos)) return Pair(
             ResultType.FAIL, Text.translatable("This chunk has been settled already!")
         )
         val neighbors = getChunkNeighbours(pos).map { it.first }
-        println("Neighbors - $neighbors")
-        println(neighbors.contains(settlement.id))
         if (neighbors.isEmpty()) return Pair(
-            ResultType.FAIL, Text.translatable("This chunk isn't connected to any claim! try /civ outpost")
+            ResultType.FAIL, Text.translatable("This chunk isn't connected to any settlements! Try /civ outpost")
         )
         settlement.chunks.add(pos)
         updateSettlement(settlement)
         WebMaps.modifySettlement(settlement)
         return Pair(ResultType.SUCCESS, Text.translatable("Chunk successfully added!"))
+    }
+
+    fun removeChunk(settlement: Settlement, pos: ChunkPos): Pair<ResultType, Text> {
+        if (!getSettledChunks().contains(pos)) return Pair(
+            ResultType.FAIL, Text.translatable("This chunk isn't part of your settlement!")
+        )
+
+        settlement.chunks.remove(pos)
+        updateSettlement(settlement)
+        WebMaps.modifySettlement(settlement)
+        return Pair(ResultType.SUCCESS, Text.translatable("Chunk successfully removed!"))
     }
 
     fun updateSettlement(settlement: Settlement) {
@@ -119,8 +112,8 @@ object SettlementsManager {
         return neighbors
     }
 
-    private fun canCreateSettlementInDim(dim: Identifier): Boolean {
-        return true
+    private fun canCreateSettlementInDim(dim: Identifier?): Boolean {
+        return dim != null
     }
 
     fun save(server: MinecraftServer, world: World) {

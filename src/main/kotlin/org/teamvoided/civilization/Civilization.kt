@@ -7,6 +7,7 @@ import net.minecraft.server.MinecraftServer
 import net.minecraft.util.Identifier
 import org.slf4j.LoggerFactory
 import org.teamvoided.civilization.commands.TestCommand
+import org.teamvoided.civilization.commands.argument.SettlementArgumentType
 import org.teamvoided.civilization.compat.SquaremapIntegrations
 import org.teamvoided.civilization.data.SettlementsManager
 
@@ -14,6 +15,7 @@ import org.teamvoided.civilization.data.SettlementsManager
 @Suppress("unused")
 object Civilization {
     const val MODID = "civilization"
+    val DEV_ENV = FabricLoader.getInstance().isDevelopmentEnvironment
 
     @JvmField
     val LOGGER = LoggerFactory.getLogger(Civilization::class.simpleName)
@@ -21,7 +23,8 @@ object Civilization {
     fun commonInit() {
         LOGGER.info("Hello from Common")
         SettlementsManager.init()
-        TestCommand.init()
+        SettlementArgumentType.init()
+        if (DEV_ENV) TestCommand.init()
         ServerLifecycleEvents.SERVER_STARTED.register(::afterServerLoads)
     }
 

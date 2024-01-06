@@ -27,12 +27,11 @@ import xyz.jpenilla.squaremap.api.marker.Marker
 import xyz.jpenilla.squaremap.api.marker.MarkerOptions
 import java.awt.Color
 import java.util.*
-import kotlin.math.floor
 
 
 object TestCommand {
+    var DEBUG_MODE = false
     fun init() {
-        SettlementArgumentType.init()
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             val testNode = literal("qtest").build()
             dispatcher.root.addChild(testNode)
@@ -65,13 +64,24 @@ object TestCommand {
             val claimCivName = argument("name", SettlementArgumentType.settlement())
                 .executes { civClaim(it, SettlementArgumentType.getSettlement(it, "name")) }.build()
             claimCiv.addChild(claimCivName)
+            val unclaimCiv = literal("unclaim").build()
+            civNode.addChild(unclaimCiv)
+            val unclaimCivName = argument("name", SettlementArgumentType.settlement())
+                .executes { civUnclaim(it, SettlementArgumentType.getSettlement(it, "name")) }.build()
+            unclaimCiv.addChild(unclaimCivName)
             val infoCiv = literal("info").build()
             civNode.addChild(infoCiv)
             val infoCivName = argument("name", SettlementArgumentType.settlement())
                 .executes { civInfo(it, SettlementArgumentType.getSettlement(it, "name")) }.build()
             infoCiv.addChild(infoCivName)
-        }
 
+            val debugMode = literal("debug_mode").executes {
+                DEBUG_MODE = !DEBUG_MODE
+                it.source.sendSystemMessage(Text.literal("Debug mode : $DEBUG_MODE"))
+                1
+            }.build()
+            dispatcher.root.addChild(debugMode)
+        }
     }
 
     private fun civAdd(c: CommandContext<ServerCommandSource>, name: Text): Int {
@@ -131,6 +141,21 @@ object TestCommand {
         val player = src.player ?: return 0
 
         val results = SettlementsManager.addChunk(settlement, world.getChunk(player.blockPos).pos)
+
+        if (results.first == SettlementsManager.ResultType.FAIL) {
+            src.sendError(results.second)
+            return 0
+        }
+        src.sendSystemMessage(results.second)
+        return 1
+    }
+
+    private fun civUnclaim(c: CommandContext<ServerCommandSource>, settlement: Settlement): Int {
+        val src = c.source
+        val world = src.world
+        val player = src.player ?: return 0
+
+        val results = SettlementsManager.removeChunk(settlement, world.getChunk(player.blockPos).pos)
 
         if (results.first == SettlementsManager.ResultType.FAIL) {
             src.sendError(results.second)

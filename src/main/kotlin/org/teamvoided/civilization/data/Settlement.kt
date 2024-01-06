@@ -8,6 +8,7 @@ import org.teamvoided.civilization.serializers.BlockPosSerializer
 import org.teamvoided.civilization.serializers.ChunkPosSerializer
 import org.teamvoided.civilization.serializers.IdentifierSerializer
 import org.teamvoided.civilization.serializers.UUIDSerializer
+import org.teamvoided.civilization.util.Util
 import java.util.UUID
 
 @Serializable
@@ -18,11 +19,38 @@ data class Settlement(
     val type: SettlementType,
     val citizens: MutableSet<@Serializable(with = UUIDSerializer::class) UUID>,
     val chunks: MutableSet<@Serializable(with = ChunkPosSerializer::class) ChunkPos>,
-    @Serializable(with = BlockPosSerializer::class) val capital: BlockPos,
+    val hamlets: MutableSet<@Serializable(with = UUIDSerializer::class) UUID>?,
+    val isHamlet: Boolean,
+    @Serializable(with = UUIDSerializer::class) val nation: UUID?,
+    val isCapital: Boolean,
+    @Serializable(with = BlockPosSerializer::class) val center: BlockPos,
     @Serializable(with = UUIDSerializer::class) val leader: UUID,
-    @Serializable(with = UUIDSerializer::class) val councilDelegate: UUID?,
     @Serializable(with = IdentifierSerializer::class) val dimension: Identifier
 ) {
+
+    constructor(
+        id: UUID,
+        name: String,
+        leader: UUID,
+        chunkPos: ChunkPos,
+        centerPos: BlockPos,
+        dimension: Identifier
+    ) : this(
+        id,
+        name,
+        Util.formatId(name),
+        Settlement.SettlementType.BASE,
+        mutableSetOf(leader),
+        mutableSetOf(chunkPos),
+        null,
+        false,
+        null,
+        false,
+        centerPos,
+        leader,
+        dimension
+    )
+
     fun formatId(): String = this.id.toString().lowercase()
     override fun toString(): String {
         return "id - ${this.id}\n" +
@@ -31,12 +59,15 @@ data class Settlement(
                 "type - ${this.type}\n" +
                 "citizens - ${this.citizens.map { it.toString() }}\n" +
                 "chunks - ${this.chunks.map { it.toString() }}\n" +
-                "capital - ${this.capital}\n" +
+                "hamlets - ${this.hamlets?.map { it.toString() }}\n" +
+                "isHamlet - ${this.isHamlet}\n" +
+                "nation - ${this.nation}\n" +
+                "isCapital - ${this.isCapital}\n" +
+                "capital - ${this.center}\n" +
                 "leader - ${this.leader}\n" +
-                "councilDelegate - ${this.councilDelegate}\n" +
                 "dimension - ${this.dimension}"
     }
 
     @Serializable
-    enum class SettlementType { BASE, TOWN, CITY, NATION }
+    enum class SettlementType { BASE, CAMP, TOWN, CITY }
 }
