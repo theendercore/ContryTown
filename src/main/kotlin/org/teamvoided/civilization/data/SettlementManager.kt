@@ -3,44 +3,42 @@ package org.teamvoided.civilization.data
 import eu.pb4.playerdata.api.PlayerDataApi
 import eu.pb4.playerdata.api.storage.JsonDataStorage
 import eu.pb4.playerdata.api.storage.PlayerDataStorage
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.json.Json
-import net.minecraft.registry.RegistryKey
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
-import net.minecraft.util.WorldSavePath
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.world.World
-import net.minecraft.world.dimension.DimensionType
 import org.teamvoided.civilization.Civilization.LOGGER
 import org.teamvoided.civilization.compat.WebMaps
+import org.teamvoided.civilization.util.BasicDirection
+import org.teamvoided.civilization.util.ResultType
+import org.teamvoided.civilization.util.Util
+import org.teamvoided.civilization.util.Util.getModSavePath
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
-import java.nio.file.Path
 import java.util.*
 
 
+@Suppress("MemberVisibilityCanBePrivate")
 object SettlementManager {
     private val settlements: MutableList<Settlement> = mutableListOf()
     private val PLAYER_DATA: PlayerDataStorage<PlayerData> = JsonDataStorage("civilization", PlayerData::class.java)
+    private var canReadFiles = true
 
-    @OptIn(ExperimentalSerializationApi::class)
-    private val json = Json { prettyPrint = true; prettyPrintIndent = "  " }
 
     fun init() {
         PlayerDataApi.register(PLAYER_DATA)
     }
 
     fun postServerInit(server: MinecraftServer) {
-        LOGGER.info("Server Loaded!")
-        for (world in server.worlds) load(server, world.registryKey)
+        for (world in server.worlds) load(server, world)
     }
 
+    @Suppress("unused")
     fun getById(id: String): Settlement? = settlements.find { it.id == UUID.fromString(id) }
     fun getByName(name: String): Settlement? = settlements.find { it.nameId == name }
     fun getSettledChunks(): Map<ChunkPos, UUID> =
@@ -51,7 +49,7 @@ object SettlementManager {
     ): Pair<ResultType, Text> {
         val leader = player.uuid
         val data = PlayerDataApi.getCustomDataFor(player, PLAYER_DATA)
-        if (data != null && data.citizenship.isNotEmpty()) return Pair(
+        if (data != null && data.settlement.isNotEmpty()) return Pair(
             ResultType.FAIL, Text.translatable("You are in a settlement you cant crete a new one!")
         )
         if (!canCreateSettlementInDim(dimension)) return Pair(
@@ -95,17 +93,16 @@ object SettlementManager {
     }
 
     fun updateSettlement(settlement: Settlement) {
-        val index = settlements.indexOfFirst { it.id == settlement.id }
-        settlements[index] = settlement
+        settlements[settlements.indexOf(settlement)] = settlement
     }
 
     fun getAllSettlement(): List<Settlement> {
         return settlements.toList()
     }
 
-    fun getChunkNeighbours(pos: ChunkPos): List<Triple<UUID, ChunkPos, ChunkDirection>> {
-        val neighbors: MutableList<Triple<UUID, ChunkPos, ChunkDirection>> = mutableListOf()
-        for (dir in ChunkDirection.entries) {
+    fun getChunkNeighbours(pos: ChunkPos): List<Triple<UUID, ChunkPos, BasicDirection>> {
+        val neighbors: MutableList<Triple<UUID, ChunkPos, BasicDirection>> = mutableListOf()
+        for (dir in BasicDirection.entries) {
             val newPos = ChunkPos(pos.x + dir.x, pos.z + dir.z)
             getSettledChunks()[newPos]?.let { neighbors.add(Triple(it, newPos, dir)) }
         }
@@ -117,41 +114,39 @@ object SettlementManager {
     }
 
     fun save(server: MinecraftServer, world: World) {
-        getModSavePath(server, world.registryKey).toFile().mkdirs()
-        Thread {
-            try {
-                FileWriter(getSettlementSaveFile(server, world.registryKey)).use {
-                    it.write(json.encodeToString(ListSerializer(Settlement.serializer()), settlements))
+        if (canReadFiles) {
+            canReadFiles = false
+            Thread {
+                try {
+                    FileWriter(getSettlementSaveFile(server, world)).use {
+                        it.write(Util.json.encodeToString(ListSerializer(Settlement.serializer()), settlements))
+                    }
+                } catch (e: Exception) {
+                    LOGGER.error("Failed to save Settlements to file! \n {}", e.stackTrace)
                 }
+                canReadFiles = true
+            }.start()
+        } else LOGGER.warn("Tired to read files when could not!")
+
+    }
+
+    fun load(server: MinecraftServer, world: World) {
+        if (canReadFiles) {
+            canReadFiles = false
+            try {
+                val stringData = FileReader(getSettlementSaveFile(server, world)).use { it.readText() }
+                settlements.clear()
+                settlements.addAll(Util.json.decodeFromString(ListSerializer(Settlement.serializer()), stringData))
             } catch (e: Exception) {
-                LOGGER.error("Failed to save Settlements to file! \n {}", e.stackTrace)
+                LOGGER.error("Failed to read Settlements from file! \n {}", e.stackTrace)
             }
-        }.start()
+            canReadFiles = true
+        } else LOGGER.warn("Tired to read files when could not!")
     }
 
-    fun load(server: MinecraftServer, world: RegistryKey<World>) {
-        try {
-            val stringData = FileReader(getSettlementSaveFile(server, world)).use { it.readText() }
-            settlements.clear()
-            settlements.addAll(json.decodeFromString(ListSerializer(Settlement.serializer()), stringData))
-        } catch (e: Exception) {
-            LOGGER.error("Failed to read Settlements from file! \n {}", e.stackTrace)
-        }
-    }
+    private fun getSettlementSaveFile(server: MinecraftServer, world: World): File =
+        getModSavePath(server, world).resolve("settlements.json").toFile()
 
-    private fun getSettlementSaveFile(server: MinecraftServer, world: RegistryKey<World>): File {
-        return getModSavePath(server, world).resolve("settlements.json").toFile()
-    }
-
-    private fun getModSavePath(server: MinecraftServer, world: RegistryKey<World>): Path {
-        return DimensionType.getSaveDirectory(world, server.getSavePath(WorldSavePath.ROOT)).parent.resolve("data")
-            .resolve("settlements")
-    }
-
-    enum class ResultType { SUCCESS, FAIL }
-
-    // Country | Role
-    data class PlayerData(val citizenship: Map<UUID, String>)
-
-    enum class ChunkDirection(val x: Int, val z: Int) { UP(0, -1), LEFT(-1, 0), DOWN(0, 1), RIGHT(1, 0) }
+    // (Settlement / Nation) | Role
+    data class PlayerData(val settlement: Map<UUID, String>, val citizenship: Map<UUID, String>? = null)
 }

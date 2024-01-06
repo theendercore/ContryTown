@@ -3,7 +3,7 @@ package org.teamvoided.civilization.data
 import kotlinx.serialization.Serializable
 import org.teamvoided.civilization.serializers.UUIDSerializer
 import java.util.*
-
+@Serializable
 data class Nation(
     @Serializable(with = UUIDSerializer::class) val id: UUID,
     val name: String,
