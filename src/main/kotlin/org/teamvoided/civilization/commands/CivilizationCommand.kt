@@ -38,9 +38,13 @@ object CivilizationCommand {
         val server = src.server
         val world = src.world
         val t1 = SettlementManager.load(server, world)
-        val t2 = NationManager.load(server, world)
-        if (t1 != 1 || t2 != 1)
+        val t2 = NationManager.load()
+        if (t1 != 1 || t2 != 1) {
             src.sendSystemMessage(tText("Failed to load or to start loading!"))
+
+            return 0
+        }
+        src.sendSystemMessage(tText("Files loaded successfully!"))
 
         return 1
     }
@@ -50,9 +54,13 @@ object CivilizationCommand {
         val server = src.server
         val world = src.world
         val t1 = SettlementManager.save(server, world)
-        val t2 = NationManager.save(server, world)
-        if (t1 != 1 || t2 != 1)
+        val t2 = NationManager.save()
+        if (t1 != 1 || t2 != 1) {
             src.sendSystemMessage(tText("Failed to save or to start saving!"))
+
+            return 0
+        }
+        src.sendSystemMessage(tText("Files saved successfully!"))
 
         return 1
     }

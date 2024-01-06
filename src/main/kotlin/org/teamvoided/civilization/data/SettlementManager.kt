@@ -13,7 +13,7 @@ import org.teamvoided.civilization.compat.WebMaps
 import org.teamvoided.civilization.util.BasicDirection
 import org.teamvoided.civilization.util.ResultType
 import org.teamvoided.civilization.util.Util
-import org.teamvoided.civilization.util.Util.getModSavePath
+import org.teamvoided.civilization.util.Util.getWorldPath
 import org.teamvoided.civilization.util.Util.tText
 import java.io.File
 import java.io.FileReader
@@ -145,6 +145,6 @@ object SettlementManager {
     }
 
     private fun getSettlementSaveFile(server: MinecraftServer, world: World): File =
-        getModSavePath(server, world).resolve("settlements.json").toFile()
+        getWorldPath(server, world).resolve("settlements.json").toFile()
 
 }

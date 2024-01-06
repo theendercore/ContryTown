@@ -25,6 +25,7 @@ object Civilization {
 
     fun commonInit() {
         LOGGER.info("Hello from Common")
+        Util.getGlobalPath().toFile().mkdirs()
         CivCommands.init()
         PlayerDataManager.init()
         ServerLifecycleEvents.SERVER_STARTED.register(::afterServerLoads)
@@ -34,7 +35,7 @@ object Civilization {
 
     private fun afterServerLoads(server: MinecraftServer) {
         for (world in server.worlds) {
-            Util.getModSavePath(server, world).toFile().mkdirs()
+            Util.getWorldPath(server, world).toFile().mkdirs()
         }
 
         SettlementManager.postServerInit(server)

@@ -4,7 +4,6 @@ import kotlinx.serialization.builtins.ListSerializer
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
-import net.minecraft.world.World
 import org.teamvoided.civilization.Civilization.LOGGER
 import org.teamvoided.civilization.compat.WebMaps
 import org.teamvoided.civilization.util.ResultType
@@ -20,7 +19,7 @@ object NationManager {
     private var canReadFiles = true
 
     fun postServerInit(server: MinecraftServer) {
-        for (world in server.worlds) load(server, world)
+        load()
     }
 
     fun getById(id: String): Nation? = nations.find { it.id == UUID.fromString(id) }
@@ -59,12 +58,12 @@ object NationManager {
         return Pair(ResultType.SUCCESS, tText("Successfully created a nation!"))
     }
 
-    fun save(server: MinecraftServer, world: World): Int {
+    fun save(): Int {
         if (canReadFiles) {
             canReadFiles = false
             Thread {
                 try {
-                    FileWriter(getNationSaveFile(server, world)).use {
+                    FileWriter(getNationSaveFile()).use {
                         it.write(Util.json.encodeToString(ListSerializer(Nation.serializer()), nations))
                     }
                 } catch (e: Exception) {
@@ -79,11 +78,11 @@ object NationManager {
         return 1
     }
 
-    fun load(server: MinecraftServer, world: World): Int {
+    fun load(): Int {
         if (canReadFiles) {
             canReadFiles = false
             try {
-                val stringData = FileReader(getNationSaveFile(server, world)).use { it.readText() }
+                val stringData = FileReader(getNationSaveFile()).use { it.readText() }
                 nations.clear()
                 nations.addAll(Util.json.decodeFromString(ListSerializer(Nation.serializer()), stringData))
             } catch (e: Exception) {
@@ -97,6 +96,6 @@ object NationManager {
         return 1
     }
 
-    private fun getNationSaveFile(server: MinecraftServer, world: World): File =
-        Util.getModSavePath(server, world).resolve("nations.json").toFile()
+    private fun getNationSaveFile(): File =
+        Util.getGlobalPath().resolve("nations.json").toFile()
 }
