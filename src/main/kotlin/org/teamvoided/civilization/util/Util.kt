@@ -3,6 +3,8 @@ package org.teamvoided.civilization.util
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import net.minecraft.server.MinecraftServer
+import net.minecraft.text.MutableText
+import net.minecraft.text.Text
 import net.minecraft.util.WorldSavePath
 import net.minecraft.world.World
 import net.minecraft.world.dimension.DimensionType
@@ -24,4 +26,9 @@ object Util {
             .resolve("data")
             .resolve(Civilization.MODID)
     }
+
+    fun tText(text: String, vararg args: Any?): MutableText = Text.translatable(text, args)
+    fun lText(text: String): MutableText = Text.literal(text)
+    fun emptyResult(): Pair<ResultType, MutableText> = Pair(ResultType.SUCCESS, tText("Result!"))
+
 }

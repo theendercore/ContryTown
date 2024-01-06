@@ -1,6 +1,8 @@
 package org.teamvoided.civilization.compat
 
+import org.teamvoided.civilization.data.Nation
 import org.teamvoided.civilization.data.Settlement
+import org.teamvoided.civilization.data.SettlementManager
 
 object WebMaps {
 
@@ -11,11 +13,15 @@ object WebMaps {
         if (squaremapEnabled) SquaremapIntegrations.addSettlementMarker(settlement)
     }
 
-    fun modifySettlement(settlement: Settlement) {
+    fun addNation(nation: Nation) {
         if (squaremapEnabled) {
-            SquaremapIntegrations.removeSettlementMarker(settlement)
-            SquaremapIntegrations.addSettlementMarker(settlement)
+            nation.settlements.forEach { SquaremapIntegrations.modifySettlement(SettlementManager.getById(it)!!) }
         }
+    }
+
+    fun modifySettlement(settlement: Settlement) {
+        if (squaremapEnabled) SquaremapIntegrations.modifySettlement(settlement)
+
 
     }
 

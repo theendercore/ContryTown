@@ -11,51 +11,51 @@ import net.fabricmc.fabric.api.command.v2.ArgumentTypeRegistry
 import net.minecraft.command.CommandSource
 import net.minecraft.command.argument.SingletonArgumentInfo
 import net.minecraft.server.command.ServerCommandSource
+import net.minecraft.text.Text
 import org.teamvoided.civilization.Civilization
-import org.teamvoided.civilization.data.Settlement
-import org.teamvoided.civilization.data.SettlementManager
-import org.teamvoided.civilization.util.Util.tText
+import org.teamvoided.civilization.data.Nation
+import org.teamvoided.civilization.data.NationManager
 import java.util.concurrent.CompletableFuture
 
-class SettlementArgumentType : ArgumentType<String> {
+class NationArgumentType : ArgumentType<String> {
     @Throws(CommandSyntaxException::class)
     override fun parse(stringReader: StringReader): String = stringReader.readUnquotedString()
     override fun <S> listSuggestions(
         commandContext: CommandContext<S>, suggestionsBuilder: SuggestionsBuilder
     ): CompletableFuture<Suggestions> {
         return if (commandContext.source is CommandSource) CommandSource.suggestMatching(
-            SettlementManager.getAllSettlement().map { it.nameId }, suggestionsBuilder
+            NationManager.getAllNations().map { it.nameId }, suggestionsBuilder
         ) else Suggestions.empty()
     }
 
     override fun getExamples(): Collection<String> = EXAMPLES
 
     companion object {
-        private val EXAMPLES = mutableListOf("this_cool_place", "town123")
-        private val UNKNOWN_SETTLEMENT_EXCEPTION = DynamicCommandExceptionType {
-            tText("Settlement %s not found!", it)
+        private val EXAMPLES = mutableListOf("this_cool_nation", "fire_nation123")
+        private val UNKNOWN_NATION_EXCEPTION = DynamicCommandExceptionType {
+            Text.method_54159("Nation %s not found!", it)
         }
 
-        fun settlement(): SettlementArgumentType {
-            return SettlementArgumentType()
+        fun nation(): NationArgumentType {
+            return NationArgumentType()
         }
 
         @Throws(CommandSyntaxException::class)
-        fun getSettlement(context: CommandContext<ServerCommandSource>, name: String): Settlement {
+        fun getNation(context: CommandContext<ServerCommandSource>, name: String): Nation {
             val string = context.getArgument(name, String::class.java)
-            val settlement = SettlementManager.getByName(string)
-            if (settlement == null) {
-                throw UNKNOWN_SETTLEMENT_EXCEPTION.create(string)
+            val nation = NationManager.getByName(string)
+            if (nation == null) {
+                throw UNKNOWN_NATION_EXCEPTION.create(string)
             } else {
-                return settlement
+                return nation
             }
         }
 
         fun init() {
             ArgumentTypeRegistry.registerArgumentType(
-                Civilization.id("settlement"),
-                SettlementArgumentType::class.java,
-                SingletonArgumentInfo.contextFree(SettlementArgumentType::settlement)
+                Civilization.id("nation"),
+                NationArgumentType::class.java,
+                SingletonArgumentInfo.contextFree(NationArgumentType::nation)
             )
         }
     }

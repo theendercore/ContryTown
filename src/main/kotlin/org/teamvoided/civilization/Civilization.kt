@@ -9,8 +9,9 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.teamvoided.civilization.compat.SquaremapIntegrations
 import org.teamvoided.civilization.data.NationManager
+import org.teamvoided.civilization.data.PlayerDataManager
 import org.teamvoided.civilization.data.SettlementManager
-import org.teamvoided.civilization.init.CivilizationCommands
+import org.teamvoided.civilization.init.CivCommands
 import org.teamvoided.civilization.util.Util
 
 
@@ -24,8 +25,8 @@ object Civilization {
 
     fun commonInit() {
         LOGGER.info("Hello from Common")
-        CivilizationCommands.init()
-        SettlementManager.init()
+        CivCommands.init()
+        PlayerDataManager.init()
         ServerLifecycleEvents.SERVER_STARTED.register(::afterServerLoads)
     }
 

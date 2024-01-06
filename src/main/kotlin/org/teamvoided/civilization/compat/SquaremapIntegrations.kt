@@ -64,6 +64,12 @@ object SquaremapIntegrations {
         markerLayers[settlement.dimension.toString()]!!.removeMarker(Key.of(settlement.formatId()))
     }
 
+    fun modifySettlement(settlement: Settlement) {
+        if (markerLayers.isEmpty()) return
+        removeSettlementMarker(settlement)
+        addSettlementMarker(settlement)
+    }
+
 
     private fun ChunkPos.toCordArray() = arrayOf(
         cord(this.getOffsetX(16), this.startZ),
