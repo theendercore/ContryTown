@@ -8,7 +8,6 @@ import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType
-import org.teamvoided.civilization.data.NationManager
 import org.teamvoided.civilization.data.Settlement
 import org.teamvoided.civilization.data.SettlementManager
 import org.teamvoided.civilization.util.Util.emptyResult
@@ -94,7 +93,7 @@ object SettlementCommand {
     }
 
     private fun list(c: CommandContext<ServerCommandSource>): Int {
-        val settlements = NationManager.getAllNations()
+        val settlements = SettlementManager.getAllSettlement()
         if (settlements.isEmpty()) {
             c.source.sendSystemMessage(tText("No settlements exists!"))
             return 0
