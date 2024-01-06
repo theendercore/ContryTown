@@ -17,11 +17,7 @@ import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Style
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
-import org.teamvoided.civilization.init.CivilizationCommands.DEBUG_MODE
-import xyz.jpenilla.squaremap.api.*
-import xyz.jpenilla.squaremap.api.marker.Marker
-import xyz.jpenilla.squaremap.api.marker.MarkerOptions
-import java.awt.Color
+import org.teamvoided.civilization.init.CivCommands.DEBUG_MODE
 import java.util.*
 
 
@@ -31,8 +27,6 @@ object TestCommand {
         dispatcher.root.addChild(testNode)
         val inbuiltGuiNode = literal("inbuilt_gui").executes(this::test).build()
         testNode.addChild(inbuiltGuiNode)
-        val mapTestNode = literal("map_test").executes(this::mapTest).build()
-        testNode.addChild(mapTestNode)
 
         val mapLinkNode = literal("map_link").executes(this::mapLink).build()
         dispatcher.root.addChild(mapLinkNode)
@@ -43,11 +37,9 @@ object TestCommand {
             1
         }.build()
         dispatcher.root.addChild(debugMode)
+
+        dispatcher.register(literal("tq").redirect(testNode))
     }
-
-
-
-
 
     private fun test(c: CommandContext<ServerCommandSource>): Int {
         try {
@@ -140,52 +132,6 @@ object TestCommand {
             gui.setSlotRedirect(4, Slot(player.enderChestInventory, 0, 0, 0))
 
             gui.open()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return 0
-    }
-
-
-    private fun mapTest(c: CommandContext<ServerCommandSource>): Int {
-        try {
-            val api: Squaremap = SquaremapProvider.get()
-            val world = c.source.world
-
-            val worldKey = world.registryKey
-            val layerKey = Key.of("ender_labels")
-
-
-            val provider =
-                SimpleLayerProvider.builder("Ender Labels").showControls(true).defaultHidden(false).layerPriority(5)
-                    .zIndex(250).build()
-
-
-            api.getWorldIfEnabled(WorldIdentifier.parse(worldKey.value.toString())).ifPresent { mapWorld: MapWorld ->
-                if (!mapWorld.layerRegistry().hasEntry(layerKey)) mapWorld.layerRegistry().register(layerKey, provider)
-            }
-
-
-            val textXKey = Key.of("test_x")
-            provider.removeMarker(textXKey)
-
-            val rect = Marker.rectangle(Point.of(-100.0, -150.0), Point.of(-200.0, -250.0)).markerOptions(
-                MarkerOptions.builder().hoverTooltip("Big Wall of text. Lorem Ipsum")
-            )
-            provider.addMarker(textXKey, rect)
-
-            val p1 = Point.of(100.0, 150.0)
-            val p2 = Point.of(90.0, 250.0)
-            val p4 = Point.of(200.0, 140.0)
-            val p3 = Point.of(200.0, 250.0)
-            val polyKey = Key.of("poly")
-            provider.removeMarker(polyKey)
-
-            val poly = Marker.polygon(p1, p2, p3, p4).markerOptions(
-                MarkerOptions.builder().hoverTooltip("<b>Big Text</b>\nSome more Text").fillColor(Color.RED)
-            )
-            provider.addMarker(polyKey, poly)
-
         } catch (e: Exception) {
             e.printStackTrace()
         }
