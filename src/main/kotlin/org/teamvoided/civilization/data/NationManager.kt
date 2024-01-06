@@ -17,6 +17,7 @@ import java.util.*
 
 object NationManager {
     private val nations: MutableList<Nation> = mutableListOf()
+    private var canReadFiles = true
 
     fun postServerInit(server: MinecraftServer) {
         for (world in server.worlds) load(server, world)
@@ -50,33 +51,50 @@ object NationManager {
         val newNation = Nation(name, settlement, leader)
         nations.add(newNation)
 
-        PlayerDataManager.setData(player,
+        PlayerDataManager.setData(
+            player,
             PlayerDataManager.PlayerData(data.settlements, mapOf(Pair(newNation.id, PlayerDataManager.Role.LEADER)))
         )
         WebMaps.addNation(newNation)
         return Pair(ResultType.SUCCESS, tText("Successfully created a nation!"))
     }
 
-    fun save(server: MinecraftServer, world: World) {
-        Thread {
-            try {
-                FileWriter(getNationSaveFile(server, world)).use {
-                    it.write(Util.json.encodeToString(ListSerializer(Nation.serializer()), nations))
+    fun save(server: MinecraftServer, world: World): Int {
+        if (canReadFiles) {
+            canReadFiles = false
+            Thread {
+                try {
+                    FileWriter(getNationSaveFile(server, world)).use {
+                        it.write(Util.json.encodeToString(ListSerializer(Nation.serializer()), nations))
+                    }
+                } catch (e: Exception) {
+                    LOGGER.error("Failed to save Nations to file! \n {}", e.stackTrace)
                 }
-            } catch (e: Exception) {
-                LOGGER.error("Failed to save Nations to file! \n {}", e.stackTrace)
-            }
-        }.start()
+                canReadFiles = true
+            }.start()
+        } else {
+            LOGGER.warn("Tired to write Nation files when couldn't!")
+            return 0
+        }
+        return 1
     }
 
-    fun load(server: MinecraftServer, world: World) {
-        try {
-            val stringData = FileReader(getNationSaveFile(server, world)).use { it.readText() }
-            nations.clear()
-            nations.addAll(Util.json.decodeFromString(ListSerializer(Nation.serializer()), stringData))
-        } catch (e: Exception) {
-            LOGGER.error("Failed to read Nations from file! \n {}", e.stackTrace)
+    fun load(server: MinecraftServer, world: World): Int {
+        if (canReadFiles) {
+            canReadFiles = false
+            try {
+                val stringData = FileReader(getNationSaveFile(server, world)).use { it.readText() }
+                nations.clear()
+                nations.addAll(Util.json.decodeFromString(ListSerializer(Nation.serializer()), stringData))
+            } catch (e: Exception) {
+                LOGGER.error("Failed to read Nations from file! \n {}", e.stackTrace)
+            }
+            canReadFiles = true
+        } else {
+            LOGGER.warn("Tired to read Nation files when couldn't!")
+            return 0
         }
+        return 1
     }
 
     private fun getNationSaveFile(server: MinecraftServer, world: World): File =
