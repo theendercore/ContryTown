@@ -27,6 +27,7 @@ import xyz.jpenilla.squaremap.api.marker.Marker
 import xyz.jpenilla.squaremap.api.marker.MarkerOptions
 import java.awt.Color
 import java.util.*
+import kotlin.math.floor
 
 
 object TestCommand {
@@ -64,6 +65,11 @@ object TestCommand {
             val claimCivName = argument("name", SettlementArgumentType.settlement())
                 .executes { civClaim(it, SettlementArgumentType.getSettlement(it, "name")) }.build()
             claimCiv.addChild(claimCivName)
+            val infoCiv = literal("info").build()
+            civNode.addChild(infoCiv)
+            val infoCivName = argument("name", SettlementArgumentType.settlement())
+                .executes { civInfo(it, SettlementArgumentType.getSettlement(it, "name")) }.build()
+            infoCiv.addChild(infoCivName)
         }
 
     }
@@ -75,6 +81,7 @@ object TestCommand {
         val results = SettlementsManager.addSettlement(
             name.string, player, world.getChunk(player.blockPos).pos, player.blockPos, world.registryKey.value
         )
+
         if (results.first == SettlementsManager.ResultType.FAIL) {
             src.sendError(results.second)
             return 0
@@ -91,10 +98,21 @@ object TestCommand {
         return 1
     }
 
+    private fun civInfo(c: CommandContext<ServerCommandSource>, settlement: Settlement): Int {
+        c.source.sendSystemMessage(Text.of(settlement.toString()))
+        return 1
+    }
+
     private fun civList(c: CommandContext<ServerCommandSource>): Int {
-        for (camp in SettlementsManager.getAllSettlement()) {
-            c.source.sendSystemMessage(Text.literal(camp.name))
+        val src = c.source
+        val settles = SettlementsManager.getAllSettlement()
+        if (settles.isEmpty()) {
+            src.sendSystemMessage(Text.of("No settlements exists"))
+
+            return 0
         }
+        for (camp in settles) c.source.sendSystemMessage(Text.literal(camp.name))
+
         return 1
     }
 
@@ -103,6 +121,7 @@ object TestCommand {
         val server = src.server
         val world = src.world
         SettlementsManager.save(server, world)
+
         return 1
     }
 

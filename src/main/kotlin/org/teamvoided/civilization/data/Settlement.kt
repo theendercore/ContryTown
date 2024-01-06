@@ -12,23 +12,30 @@ import java.util.UUID
 
 @Serializable
 data class Settlement(
-    @Serializable(with = UUIDSerializer::class)
-    val id: UUID,
+    @Serializable(with = UUIDSerializer::class) val id: UUID,
     val name: String,
     val nameId: String,
     val type: SettlementType,
     val citizens: MutableSet<@Serializable(with = UUIDSerializer::class) UUID>,
     val chunks: MutableSet<@Serializable(with = ChunkPosSerializer::class) ChunkPos>,
-    @Serializable(with = BlockPosSerializer::class)
-    val capital: BlockPos,
-    @Serializable(with = UUIDSerializer::class)
-    val leader: UUID,
-    @Serializable(with = UUIDSerializer::class)
-    val councilDelegate: UUID?,
-    @Serializable(with = IdentifierSerializer::class)
-    val dimension: Identifier
+    @Serializable(with = BlockPosSerializer::class) val capital: BlockPos,
+    @Serializable(with = UUIDSerializer::class) val leader: UUID,
+    @Serializable(with = UUIDSerializer::class) val councilDelegate: UUID?,
+    @Serializable(with = IdentifierSerializer::class) val dimension: Identifier
 ) {
     fun formatId(): String = this.id.toString().lowercase()
+    override fun toString(): String {
+        return "id - ${this.id}\n" +
+                "name - ${this.name}\n" +
+                "nameId - ${this.nameId}\n" +
+                "type - ${this.type}\n" +
+                "citizens - ${this.citizens.map { it.toString() }}\n" +
+                "chunks - ${this.chunks.map { it.toString() }}\n" +
+                "capital - ${this.capital}\n" +
+                "leader - ${this.leader}\n" +
+                "councilDelegate - ${this.councilDelegate}\n" +
+                "dimension - ${this.dimension}"
+    }
 
     @Serializable
     enum class SettlementType { BASE, TOWN, CITY, NATION }

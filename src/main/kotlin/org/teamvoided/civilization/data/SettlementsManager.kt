@@ -14,6 +14,7 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.WorldSavePath
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
+import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 import net.minecraft.world.dimension.DimensionType
 import org.teamvoided.civilization.Civilization.LOGGER
@@ -44,8 +45,9 @@ object SettlementsManager {
 
     fun getById(id: String): Settlement? = settlements.find { it.id == UUID.fromString(id) }
     fun getByName(name: String): Settlement? = settlements.find { it.nameId == name }
+    fun getSettledChunks(): Map<ChunkPos, UUID> =
+        settlements.flatMap { set -> set.chunks.map { Pair(it, set.id) } }.toMap()
 
-    fun getSettledChunks(): Map<UUID, ChunkPos> = settlements.flatMap { set -> set.chunks.map { Pair(set.id, it) }.asIterable() }.toMap()
     fun addSettlement(
         name: String, player: ServerPlayerEntity, chunkPos: ChunkPos, capitalPos: BlockPos, dimension: Identifier
     ): Pair<ResultType, Text> {
@@ -57,7 +59,7 @@ object SettlementsManager {
         if (!canCreateSettlementInDim(dimension)) return Pair(
             ResultType.FAIL, Text.translatable("Can't settle in this dimension")
         )
-        if (getSettledChunks().containsValue(chunkPos)) return Pair(
+        if (getSettledChunks().contains(chunkPos)) return Pair(
             ResultType.FAIL, Text.translatable("This chunk has been settled already!")
         )
         val id = UUID.randomUUID()
@@ -81,11 +83,16 @@ object SettlementsManager {
     }
 
     fun addChunk(settlement: Settlement, pos: ChunkPos): Pair<ResultType, Text> {
-        if (getSettledChunks().containsValue(pos)) return Pair(
+        println(settlement)
+        println("Claim pos - $pos")
+        println("SettledChunks - ${getSettledChunks()}")
+        if (getSettledChunks().contains(pos)) return Pair(
             ResultType.FAIL, Text.translatable("This chunk has been settled already!")
         )
-        val neighbors = getChunkNeighbours(pos)
-        if (neighbors.isEmpty() || !neighbors.contains(settlement.id)) return Pair(
+        val neighbors = getChunkNeighbours(pos).map { it.first }
+        println("Neighbors - $neighbors")
+        println(neighbors.contains(settlement.id))
+        if (neighbors.isEmpty()) return Pair(
             ResultType.FAIL, Text.translatable("This chunk isn't connected to any claim! try /civ outpost")
         )
         settlement.chunks.add(pos)
@@ -103,11 +110,11 @@ object SettlementsManager {
         return settlements.toList()
     }
 
-    fun getChunkNeighbours(pos: ChunkPos): List<UUID> {
-        val neighbors: MutableList<UUID> = mutableListOf()
+    fun getChunkNeighbours(pos: ChunkPos): List<Triple<UUID, ChunkPos, ChunkDirection>> {
+        val neighbors: MutableList<Triple<UUID, ChunkPos, ChunkDirection>> = mutableListOf()
         for (dir in ChunkDirection.entries) {
             val newPos = ChunkPos(pos.x + dir.x, pos.z + dir.z)
-            if (getSettledChunks().containsValue(newPos)) neighbors.add(getSettledChunks().filterValues { it == newPos }.keys.first())
+            getSettledChunks()[newPos]?.let { neighbors.add(Triple(it, newPos, dir)) }
         }
         return neighbors
     }
@@ -141,10 +148,6 @@ object SettlementsManager {
 
     private fun getSettlementSaveFile(server: MinecraftServer, world: RegistryKey<World>): File {
         return getModSavePath(server, world).resolve("settlements.json").toFile()
-    }
-
-    private fun getSettledChunksSaveFile(server: MinecraftServer, world: RegistryKey<World>): File {
-        return getModSavePath(server, world).resolve("settled_chunks.json").toFile()
     }
 
     private fun getModSavePath(server: MinecraftServer, world: RegistryKey<World>): Path {

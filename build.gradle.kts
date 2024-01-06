@@ -35,6 +35,8 @@ dependencies {
     modImplementation(include("eu.pb4:sgui:1.4.0+1.20.4")!!)
     modImplementation(include("eu.pb4:player-data-api:0.4.0+1.20.3")!!)
 
+    implementation( "org.locationtech.jts:jts-core:${"1.16.1"}")
+
 //    modImplementation("maven.modrinth:flan:1.20.2-1.8.11")
 }
 
