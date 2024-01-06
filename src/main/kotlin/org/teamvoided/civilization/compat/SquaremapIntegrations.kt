@@ -5,7 +5,7 @@ import org.locationtech.jts.geom.Coordinate
 import org.locationtech.jts.geom.Geometry
 import org.locationtech.jts.geom.GeometryFactory
 import org.teamvoided.civilization.data.Settlement
-import org.teamvoided.civilization.data.SettlementsManager
+import org.teamvoided.civilization.data.SettlementManager
 import xyz.jpenilla.squaremap.api.Key
 import xyz.jpenilla.squaremap.api.Point
 import xyz.jpenilla.squaremap.api.SimpleLayerProvider
@@ -35,7 +35,7 @@ object SquaremapIntegrations {
             }
         }
         Thread {
-            for (settlement in SettlementsManager.getAllSettlement()) {
+            for (settlement in SettlementManager.getAllSettlement()) {
                 addSettlementMarker(settlement)
             }
         }.start()

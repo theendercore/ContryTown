@@ -21,7 +21,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType
 import org.teamvoided.civilization.data.Settlement
-import org.teamvoided.civilization.data.SettlementsManager
+import org.teamvoided.civilization.data.SettlementManager
 import xyz.jpenilla.squaremap.api.*
 import xyz.jpenilla.squaremap.api.marker.Marker
 import xyz.jpenilla.squaremap.api.marker.MarkerOptions
@@ -88,11 +88,11 @@ object TestCommand {
         val src = c.source
         val world = src.world
         val player = src.player ?: return 0
-        val results = SettlementsManager.addSettlement(
+        val results = SettlementManager.addSettlement(
             name.string, player, world.getChunk(player.blockPos).pos, player.blockPos, world.registryKey.value
         )
 
-        if (results.first == SettlementsManager.ResultType.FAIL) {
+        if (results.first == SettlementManager.ResultType.FAIL) {
             src.sendError(results.second)
             return 0
         }
@@ -103,7 +103,7 @@ object TestCommand {
     private fun civRead(c: CommandContext<ServerCommandSource>): Int {
         val server = c.source.server
         val world = c.source.world
-        SettlementsManager.load(server, world.registryKey)
+        SettlementManager.load(server, world.registryKey)
 
         return 1
     }
@@ -115,7 +115,7 @@ object TestCommand {
 
     private fun civList(c: CommandContext<ServerCommandSource>): Int {
         val src = c.source
-        val settles = SettlementsManager.getAllSettlement()
+        val settles = SettlementManager.getAllSettlement()
         if (settles.isEmpty()) {
             src.sendSystemMessage(Text.of("No settlements exists"))
 
@@ -130,7 +130,7 @@ object TestCommand {
         val src = c.source
         val server = src.server
         val world = src.world
-        SettlementsManager.save(server, world)
+        SettlementManager.save(server, world)
 
         return 1
     }
@@ -140,9 +140,9 @@ object TestCommand {
         val world = src.world
         val player = src.player ?: return 0
 
-        val results = SettlementsManager.addChunk(settlement, world.getChunk(player.blockPos).pos)
+        val results = SettlementManager.addChunk(settlement, world.getChunk(player.blockPos).pos)
 
-        if (results.first == SettlementsManager.ResultType.FAIL) {
+        if (results.first == SettlementManager.ResultType.FAIL) {
             src.sendError(results.second)
             return 0
         }
@@ -155,9 +155,9 @@ object TestCommand {
         val world = src.world
         val player = src.player ?: return 0
 
-        val results = SettlementsManager.removeChunk(settlement, world.getChunk(player.blockPos).pos)
+        val results = SettlementManager.removeChunk(settlement, world.getChunk(player.blockPos).pos)
 
-        if (results.first == SettlementsManager.ResultType.FAIL) {
+        if (results.first == SettlementManager.ResultType.FAIL) {
             src.sendError(results.second)
             return 0
         }

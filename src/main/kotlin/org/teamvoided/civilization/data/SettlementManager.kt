@@ -25,7 +25,7 @@ import java.nio.file.Path
 import java.util.*
 
 
-object SettlementsManager {
+object SettlementManager {
     private val settlements: MutableList<Settlement> = mutableListOf()
     private val PLAYER_DATA: PlayerDataStorage<PlayerData> = JsonDataStorage("civilization", PlayerData::class.java)
 

@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 import org.teamvoided.civilization.commands.TestCommand
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType
 import org.teamvoided.civilization.compat.SquaremapIntegrations
-import org.teamvoided.civilization.data.SettlementsManager
+import org.teamvoided.civilization.data.SettlementManager
 
 
 @Suppress("unused")
@@ -22,7 +22,7 @@ object Civilization {
 
     fun commonInit() {
         LOGGER.info("Hello from Common")
-        SettlementsManager.init()
+        SettlementManager.init()
         SettlementArgumentType.init()
         if (DEV_ENV) TestCommand.init()
         ServerLifecycleEvents.SERVER_STARTED.register(::afterServerLoads)
@@ -31,7 +31,7 @@ object Civilization {
     fun id(path: String) = Identifier(MODID, path)
 
     private fun afterServerLoads(server: MinecraftServer) {
-        SettlementsManager.postServerInit(server)
+        SettlementManager.postServerInit(server)
         if (FabricLoader.getInstance().isModLoaded("squaremap"))
             SquaremapIntegrations.reg()
     }

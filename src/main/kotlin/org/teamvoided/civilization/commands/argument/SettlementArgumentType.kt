@@ -14,7 +14,7 @@ import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
 import org.teamvoided.civilization.Civilization
 import org.teamvoided.civilization.data.Settlement
-import org.teamvoided.civilization.data.SettlementsManager
+import org.teamvoided.civilization.data.SettlementManager
 import java.util.concurrent.CompletableFuture
 
 class SettlementArgumentType : ArgumentType<String> {
@@ -24,7 +24,7 @@ class SettlementArgumentType : ArgumentType<String> {
         commandContext: CommandContext<S>, suggestionsBuilder: SuggestionsBuilder
     ): CompletableFuture<Suggestions> {
         return if (commandContext.source is CommandSource) CommandSource.suggestMatching(
-            SettlementsManager.getAllSettlement().map { it.nameId }, suggestionsBuilder
+            SettlementManager.getAllSettlement().map { it.nameId }, suggestionsBuilder
         ) else Suggestions.empty()
     }
 
@@ -43,7 +43,7 @@ class SettlementArgumentType : ArgumentType<String> {
         @Throws(CommandSyntaxException::class)
         fun getSettlement(context: CommandContext<ServerCommandSource>, name: String): Settlement {
             val string = context.getArgument(name, String::class.java)
-            val settlement = SettlementsManager.getByName(string)
+            val settlement = SettlementManager.getByName(string)
             if (settlement == null) {
                 throw UNKNOWN_SETTLEMENT_EXCEPTION.create(string)
             } else {
