@@ -54,8 +54,7 @@ object SettlementManager {
         settlements.add(newSet)
 
         PlayerDataManager.setData(
-            player,
-            PlayerDataManager.PlayerData(mapOf(Pair(newSet.id, PlayerDataManager.Role.LEADER)))
+            player, PlayerDataManager.PlayerData(mapOf(Pair(newSet.id, PlayerDataManager.Role.LEADER)))
         )
         WebMaps.addSettlement(newSet)
         return Pair(ResultType.SUCCESS, tText("Successfully created a base!"))
@@ -107,7 +106,7 @@ object SettlementManager {
         return dim != null
     }
 
-    fun save(server: MinecraftServer, world: World) {
+    fun save(server: MinecraftServer, world: World): Int {
         if (canReadFiles) {
             canReadFiles = false
             Thread {
@@ -120,11 +119,14 @@ object SettlementManager {
                 }
                 canReadFiles = true
             }.start()
-        } else LOGGER.warn("Tired to read files when could not!")
-
+        } else {
+            LOGGER.warn("Tired to write Settlement files when couldn't!")
+            return 0
+        }
+        return 1
     }
 
-    fun load(server: MinecraftServer, world: World) {
+    fun load(server: MinecraftServer, world: World): Int {
         if (canReadFiles) {
             canReadFiles = false
             try {
@@ -135,7 +137,11 @@ object SettlementManager {
                 LOGGER.error("Failed to read Settlements from file! \n {}", e.stackTrace)
             }
             canReadFiles = true
-        } else LOGGER.warn("Tired to read files when could not!")
+        } else {
+            LOGGER.warn("Tired to read Settlement files when couldn't!")
+            return 0
+        }
+        return 1
     }
 
     private fun getSettlementSaveFile(server: MinecraftServer, world: World): File =
