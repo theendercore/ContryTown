@@ -1,3 +1,5 @@
+@file:Suppress("PropertyName")
+
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -7,11 +9,11 @@ plugins {
     id("org.teamvoided.iridium") version "3.1.9"
 }
 
-group = project.properties["maven_group"]!!
-version = project.properties["mod_version"]!!
-base.archivesName.set(project.properties["archives_base_name"] as String)
+group = properties["maven_group"]!!
+version = properties["mod_version"]!!
+base.archivesName.set(properties["archives_base_name"].toString())
 description = "civilization the mod"
-val modid = project.properties["modid"]!! as String
+val modid: String by project
 
 repositories {
     mavenCentral()
@@ -25,18 +27,23 @@ repositories {
 modSettings {
     modId(modid)
     modName("Civilization")
-
     entrypoint("main", "org.teamvoided.civilization.Civilization::commonInit")
     mixinFile("civilization.mixins.json")
 
 }
+val squaremap: String by project
+val sgui: String by project
+val player_data: String by project
+val server_translations: String by project
+val jts_core: String by project
 
 dependencies {
-    compileOnly("xyz.jpenilla", "squaremap-api", "1.2.3")
-    modImplementation(include("eu.pb4:sgui:1.4.0+1.20.4")!!)
-    modImplementation(include("eu.pb4:player-data-api:0.4.0+1.20.3")!!)
+    compileOnly("xyz.jpenilla", "squaremap-api", squaremap)
+    modImplementation(include("eu.pb4", "sgui", sgui))
+    modImplementation(include("eu.pb4", "player-data-api", player_data))
+    modImplementation(include("xyz.nucleoid", "server-translations-api", server_translations))
 
-    implementation( "org.locationtech.jts:jts-core:${"1.16.1"}")
+    implementation(include("org.locationtech.jts", "jts-core", jts_core))
 
 //    modImplementation("maven.modrinth:flan:1.20.2-1.8.11")
 }
