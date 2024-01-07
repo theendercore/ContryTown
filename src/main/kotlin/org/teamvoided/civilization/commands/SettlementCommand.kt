@@ -94,7 +94,6 @@ object SettlementCommand {
         val player = src.player ?: return 0
         val results = SettlementManager.removeSettlement(settlement, player, confirm)
 
-
         return when (results.first) {
             ResultType.FAIL -> {
                 src.sendError(results.second)
@@ -106,10 +105,10 @@ object SettlementCommand {
                 src.sendSystemMessage(tTxt("To delete write /settlement delete confirm")
                     .styled {
                         it.withFormatting(Formatting.GRAY, Formatting.ITALIC)
-                        .withClickEvent(
-                            ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/settlement delete confirm")
-                        )
-                        .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, tTxt("Click to run!")))
+                            .withClickEvent(
+                                ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/settlement delete confirm")
+                            )
+                            .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, tTxt("Click to run!")))
                     }
                 )
                 0
@@ -134,13 +133,11 @@ object SettlementCommand {
         return 1
     }
 
-
     private fun info(c: CommandContext<ServerCommandSource>, settlement: Settlement): Int {
         c.source.sendSystemMessage(tTxt("TEST:"))
         c.source.sendSystemMessage(tTxt(settlement.toString()))
         return 1
     }
-
 
     private fun claim(c: CommandContext<ServerCommandSource>, settlement: Settlement): Int {
         val src = c.source
