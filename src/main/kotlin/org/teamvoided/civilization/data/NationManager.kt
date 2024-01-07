@@ -50,6 +50,10 @@ object NationManager {
         val newNation = Nation(name, settlement, leader)
         nations.add(newNation)
 
+        settlement.isCapital = true
+        settlement.nation = newNation.id
+        SettlementManager.updateSettlement(settlement)
+
         PlayerDataManager.setData(
             player,
             PlayerDataManager.PlayerData(data.settlements, mapOf(Pair(newNation.id, PlayerDataManager.Role.LEADER)))

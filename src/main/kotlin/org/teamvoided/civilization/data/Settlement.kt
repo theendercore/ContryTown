@@ -21,8 +21,8 @@ data class Settlement(
     val chunks: MutableSet<@Serializable(with = ChunkPosSerializer::class) ChunkPos>,
     val hamlets: MutableSet<@Serializable(with = UUIDSerializer::class) UUID>?,
     val isHamlet: Boolean,
-    @Serializable(with = UUIDSerializer::class) val nation: UUID?,
-    val isCapital: Boolean,
+    @Serializable(with = UUIDSerializer::class) var nation: UUID?,
+    var isCapital: Boolean,
     @Serializable(with = BlockPosSerializer::class) val center: BlockPos,
     @Serializable(with = UUIDSerializer::class) val leader: UUID,
     @Serializable(with = IdentifierSerializer::class) val dimension: Identifier
