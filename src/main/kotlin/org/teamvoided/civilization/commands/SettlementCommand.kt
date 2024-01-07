@@ -8,6 +8,7 @@ import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType
+import org.teamvoided.civilization.commands.argument.SettlementArgumentType.settlementArg
 import org.teamvoided.civilization.data.Settlement
 import org.teamvoided.civilization.data.SettlementManager
 import org.teamvoided.civilization.util.Util.emptyResult
@@ -28,7 +29,7 @@ object SettlementCommand {
 
         val deleteNode = literal("delete").build()
         settlementNode.addChild(deleteNode)
-        val deleteNodeNameArg = argument("name", SettlementArgumentType.settlement())
+        val deleteNodeNameArg = settlementArg("name")
             .executes { deleteSettlement(it, SettlementArgumentType.getSettlement(it, "name")) }.build()
         deleteNode.addChild(deleteNodeNameArg)
 
@@ -37,19 +38,19 @@ object SettlementCommand {
 
         val infoNode = literal("info").build()
         settlementNode.addChild(infoNode)
-        val infoNodeNameArg = argument("name", SettlementArgumentType.settlement())
+        val infoNodeNameArg = settlementArg("name")
             .executes { info(it, SettlementArgumentType.getSettlement(it, "name")) }.build()
         infoNode.addChild(infoNodeNameArg)
 
         val claimNode = literal("claim").build()
         settlementNode.addChild(claimNode)
-        val claimNodeNameArg = argument("name", SettlementArgumentType.settlement())
+        val claimNodeNameArg = settlementArg("name")
             .executes { claim(it, SettlementArgumentType.getSettlement(it, "name")) }.build()
         claimNode.addChild(claimNodeNameArg)
 
         val desertNode = literal("desert").build()
         settlementNode.addChild(desertNode)
-        val desertNodeNameArg = argument("name", SettlementArgumentType.settlement())
+        val desertNodeNameArg = settlementArg("name")
             .executes { desert(it, SettlementArgumentType.getSettlement(it, "name")) }.build()
         desertNode.addChild(desertNodeNameArg)
 

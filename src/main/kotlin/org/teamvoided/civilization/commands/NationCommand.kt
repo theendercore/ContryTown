@@ -8,6 +8,7 @@ import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
 import org.teamvoided.civilization.commands.argument.NationArgumentType
+import org.teamvoided.civilization.commands.argument.NationArgumentType.nationArg
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType
 import org.teamvoided.civilization.data.Nation
 import org.teamvoided.civilization.data.NationManager
@@ -29,7 +30,7 @@ object NationCommand {
 
         val deleteNode = literal("delete").build()
         nationNode.addChild(deleteNode)
-        val deleteNodeNameArg = argument("name", NationArgumentType.nation())
+        val deleteNodeNameArg = nationArg("name")
             .executes { deleteNation(it, NationArgumentType.getNation(it, "name")) }.build()
         deleteNode.addChild(deleteNodeNameArg)
 
@@ -38,19 +39,19 @@ object NationCommand {
 
         val infoNode = literal("info").build()
         nationNode.addChild(infoNode)
-        val infoNodeNameArg = argument("name", NationArgumentType.nation())
+        val infoNodeNameArg = nationArg("name")
             .executes { info(it, NationArgumentType.getNation(it, "name")) }.build()
         infoNode.addChild(infoNodeNameArg)
 
         val addSettlementNode = literal("add_settlement").build()
         nationNode.addChild(addSettlementNode)
-        val addSettlementNodeNameArg = argument("name", SettlementArgumentType.settlement())
+        val addSettlementNodeNameArg = SettlementArgumentType.settlementArg("name")
             .executes { addSettlement(it, SettlementArgumentType.getSettlement(it, "name")) }.build()
         addSettlementNode.addChild(addSettlementNodeNameArg)
 
         val removeNode = literal("remove_settlement").build()
         nationNode.addChild(removeNode)
-        val removeNodeNameArg = argument("name", SettlementArgumentType.settlement())
+        val removeNodeNameArg = SettlementArgumentType.settlementArg("name")
             .executes { removeSettlement(it, SettlementArgumentType.getSettlement(it, "name")) }.build()
         removeNode.addChild(removeNodeNameArg)
 

@@ -14,7 +14,10 @@ object PlayerDataManager {
     }
 
     fun getData(player: ServerPlayerEntity): PlayerData? = PlayerDataApi.getCustomDataFor(player, PLAYER_DATA)
-    fun setData(player: ServerPlayerEntity, data:PlayerData) = PlayerDataApi.setCustomDataFor(player, PLAYER_DATA, data)
+    fun setData(player: ServerPlayerEntity, data: PlayerData) =
+        PlayerDataApi.setCustomDataFor(player, PLAYER_DATA, data)
+
+    fun clear(player: ServerPlayerEntity) = PlayerDataApi.setCustomDataFor(player, PLAYER_DATA, null)
 
     data class PlayerData(val settlements: Map<UUID, Role>, val nations: Map<UUID, Role>? = null)
 

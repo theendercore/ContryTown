@@ -6,15 +6,11 @@ import org.teamvoided.civilization.commands.CivilizationCommand
 import org.teamvoided.civilization.commands.NationCommand
 import org.teamvoided.civilization.commands.SettlementCommand
 import org.teamvoided.civilization.commands.TestCommand
-import org.teamvoided.civilization.commands.argument.NationArgumentType
-import org.teamvoided.civilization.commands.argument.SettlementArgumentType
 
 object CivCommands {
     var DEBUG_MODE = false
 
     fun init(){
-        SettlementArgumentType.init()
-        NationArgumentType.init()
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             CivilizationCommand.init(dispatcher)
             SettlementCommand.init(dispatcher)

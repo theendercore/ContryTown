@@ -16,6 +16,7 @@ import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Style
 import net.minecraft.util.Formatting
+import org.teamvoided.civilization.data.PlayerDataManager
 import org.teamvoided.civilization.init.CivCommands.DEBUG_MODE
 import org.teamvoided.civilization.util.Util.lText
 import java.util.*
@@ -30,6 +31,9 @@ object TestCommand {
 
         val mapLinkNode = literal("map_link").executes(this::mapLink).build()
         dispatcher.root.addChild(mapLinkNode)
+
+        val clearDataNode = literal("clear_data").executes(this::clearData).build()
+        testNode.addChild(clearDataNode)
 
         val debugMode = literal("debug_mode").executes {
             DEBUG_MODE = !DEBUG_MODE
@@ -144,4 +148,12 @@ object TestCommand {
         return 1
     }
 
+    private fun clearData(c: CommandContext<ServerCommandSource>): Int {
+        val src = c.source
+        val world = src.world
+        val player = src.player ?: return 0
+        PlayerDataManager.clear(player)
+        c.source.sendSystemMessage(lText("data reset"))
+        return 1
+    }
 }
