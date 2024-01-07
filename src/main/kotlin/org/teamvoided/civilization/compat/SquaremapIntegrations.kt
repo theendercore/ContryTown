@@ -4,6 +4,7 @@ import net.minecraft.util.math.ChunkPos
 import org.locationtech.jts.geom.Coordinate
 import org.locationtech.jts.geom.Geometry
 import org.locationtech.jts.geom.GeometryFactory
+import org.teamvoided.civilization.data.NationManager
 import org.teamvoided.civilization.data.Settlement
 import org.teamvoided.civilization.data.SettlementManager
 import xyz.jpenilla.squaremap.api.Key
@@ -50,8 +51,11 @@ object SquaremapIntegrations {
         polys.forEachIndexed { i, poly -> if (i != 0) unionS = unionS.union(poly) }
 
         val marker: Marker = Marker.polygon(unionS.coordinates.map { Point.of(it.x, it.y) })
+
+        val nation = if (settlement.nation != null) NationManager.getById(settlement.nation)!!.name else ""
+
         marker.markerOptions(
-            MarkerOptions.builder().hoverTooltip(settlement.name).strokeColor(Color.YELLOW).strokeOpacity(0.8)
+            MarkerOptions.builder().hoverTooltip("${settlement.name}</br>$nation").strokeColor(Color.YELLOW).strokeOpacity(0.8)
                 .strokeWeight(3).fillColor(Color.YELLOW).fillOpacity(0.2).build()
         )
         markerLayers[settlement.dimension.toString()]!!.addMarker(

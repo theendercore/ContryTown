@@ -66,7 +66,7 @@ object SettlementManager {
         )
         val neighbors = getChunkNeighbours(pos).map { it.first }
         if (neighbors.isEmpty()) return Pair(
-            ResultType.FAIL, tText("This chunk isn't connected to any settlements! Try /civ outpost")
+            ResultType.FAIL, tText("This chunk isn't connected to any settlements! Try /settlement hamlet")
         )
         settlement.chunks.add(pos)
         updateSettlement(settlement)

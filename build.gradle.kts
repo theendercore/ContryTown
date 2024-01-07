@@ -27,6 +27,7 @@ modSettings {
     modName("Civilization")
 
     entrypoint("main", "org.teamvoided.civilization.Civilization::commonInit")
+    mixinFile("civilization.mixins.json")
 
 }
 

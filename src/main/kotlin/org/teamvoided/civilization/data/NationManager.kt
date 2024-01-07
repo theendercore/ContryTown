@@ -22,7 +22,7 @@ object NationManager {
         load()
     }
 
-    fun getById(id: String): Nation? = nations.find { it.id == UUID.fromString(id) }
+    fun getById(id: UUID): Nation? = nations.find { it.id == id }
     fun getByName(name: String): Nation? = nations.find { it.nameId == name }
 
     fun getAllNations(): List<Nation> {
