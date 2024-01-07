@@ -18,7 +18,7 @@ import net.minecraft.text.Style
 import net.minecraft.util.Formatting
 import org.teamvoided.civilization.data.PlayerDataManager
 import org.teamvoided.civilization.init.CivCommands.DEBUG_MODE
-import org.teamvoided.civilization.util.Util.lText
+import org.teamvoided.civilization.util.Util.lTxt
 import java.util.*
 
 
@@ -37,7 +37,7 @@ object TestCommand {
 
         val debugMode = literal("debug_mode").executes {
             DEBUG_MODE = !DEBUG_MODE
-            it.source.sendSystemMessage(lText("Debug mode : $DEBUG_MODE"))
+            it.source.sendSystemMessage(lTxt("Debug mode : $DEBUG_MODE"))
             1
         }.build()
         dispatcher.root.addChild(debugMode)
@@ -52,7 +52,7 @@ object TestCommand {
                 override fun onClick(
                     index: Int, type: ClickType, action: SlotActionType?, element: GuiElementInterface?
                 ): Boolean {
-                    this.player.sendMessage(lText(type.toString()), false)
+                    this.player.sendMessage(lTxt(type.toString()), false)
 
                     return super.onClick(index, type, action, element)
                 }
@@ -67,7 +67,7 @@ object TestCommand {
                 }
             }
 
-            gui.setTitle(lText("Nice"))
+            gui.setTitle(lTxt("Nice"))
             gui.setSlot(0, GuiElementBuilder(Items.ARROW).setCount(100))
             gui.setSlot(1, AnimatedGuiElement(
                 arrayOf<ItemStack>(
@@ -102,26 +102,26 @@ object TestCommand {
                     "ewogICJ0aW1lc3RhbXAiIDogMTYxOTk3MDIyMjQzOCwKICAicHJvZmlsZUlkIiA6ICI2OTBkMDM2OGM2NTE0OGM5ODZjMzEwN2FjMmRjNjFlYyIsCiAgInByb2ZpbGVOYW1lIiA6ICJ5emZyXzciLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDI0OGVhYTQxNGNjZjA1NmJhOTY5ZTdkODAxZmI2YTkyNzhkMGZlYWUxOGUyMTczNTZjYzhhOTQ2NTY0MzU1ZiIsCiAgICAgICJtZXRhZGF0YSIgOiB7CiAgICAgICAgIm1vZGVsIiA6ICJzbGltIgogICAgICB9CiAgICB9CiAgfQp9",
                     null,
                     null
-                ).setName(lText("Battery")).glow()
+                ).setName(lTxt("Battery")).glow()
             )
 
             gui.setSlot(
                 6, GuiElementBuilder(Items.PLAYER_HEAD).setSkullOwner(
                     GameProfile(UUID.fromString("f5a216d9-d660-4996-8d0f-d49053677676"), "patbox"), player!!.server
-                ).setName(lText("Patbox's Head")).glow()
+                ).setName(lTxt("Patbox's Head")).glow()
             )
 
             gui.setSlot(7, GuiElementBuilder().setItem(Items.BARRIER).glow().setName(
-                lText("Bye").setStyle(Style.EMPTY.withItalic(false).withBold(true))
-            ).addLoreLine(lText("Some lore")).addLoreLine(lText("More lore").formatted(Formatting.RED))
+                lTxt("Bye").setStyle(Style.EMPTY.withItalic(false).withBold(true))
+            ).addLoreLine(lTxt("Some lore")).addLoreLine(lTxt("More lore").formatted(Formatting.RED))
                 .setCount(3)
                 .setCallback { index: Int, clickType: ClickType?, actionType: SlotActionType? -> gui.close() })
 
             gui.setSlot(8, GuiElementBuilder().setItem(Items.TNT).glow().setName(
-                lText("Test :)").setStyle(Style.EMPTY.withItalic(false).withBold(true))
-            ).addLoreLine(lText("Some lore")).addLoreLine(lText("More lore").formatted(Formatting.RED))
+                lTxt("Test :)").setStyle(Style.EMPTY.withItalic(false).withBold(true))
+            ).addLoreLine(lTxt("Some lore")).addLoreLine(lTxt("More lore").formatted(Formatting.RED))
                 .setCount(1).setCallback { index: Int, clickType: ClickType, _: SlotActionType ->
-                    player.sendMessage(lText("derg "), false)
+                    player.sendMessage(lTxt("derg "), false)
                     val item = gui.getSlot(index).itemStack
                     if (clickType == ClickType.MOUSE_LEFT) {
                         item.count = if (item.count == 1) item.count else item.count - 1
@@ -144,16 +144,15 @@ object TestCommand {
 
 
     private fun mapLink(c: CommandContext<ServerCommandSource>): Int {
-        c.source.sendSystemMessage(lText("http://localhost:8080/"))
+        c.source.sendSystemMessage(lTxt("http://localhost:8080/"))
         return 1
     }
 
     private fun clearData(c: CommandContext<ServerCommandSource>): Int {
         val src = c.source
-        val world = src.world
         val player = src.player ?: return 0
-        PlayerDataManager.clear(player)
-        c.source.sendSystemMessage(lText("data reset"))
+        PlayerDataManager.clearD(player)
+        src.sendSystemMessage(lTxt("data reset"))
         return 1
     }
 }

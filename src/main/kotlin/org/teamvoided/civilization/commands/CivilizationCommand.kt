@@ -6,7 +6,7 @@ import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.server.command.ServerCommandSource
 import org.teamvoided.civilization.data.NationManager
 import org.teamvoided.civilization.data.SettlementManager
-import org.teamvoided.civilization.util.Util.tText
+import org.teamvoided.civilization.util.Util.tTxt
 
 object CivilizationCommand {
 
@@ -40,11 +40,11 @@ object CivilizationCommand {
         val t1 = SettlementManager.load(server, world)
         val t2 = NationManager.load()
         if (t1 != 1 || t2 != 1) {
-            src.sendSystemMessage(tText("Failed to load or to start loading!"))
+            src.sendSystemMessage(tTxt("Failed to load or to start loading!"))
 
             return 0
         }
-        src.sendSystemMessage(tText("Files loaded successfully!"))
+        src.sendSystemMessage(tTxt("Files loaded successfully!"))
 
         return 1
     }
@@ -56,23 +56,23 @@ object CivilizationCommand {
         val t1 = SettlementManager.save(server, world)
         val t2 = NationManager.save()
         if (t1 != 1 || t2 != 1) {
-            src.sendSystemMessage(tText("Failed to save or to start saving!"))
+            src.sendSystemMessage(tTxt("Failed to save or to start saving!"))
 
             return 0
         }
-        src.sendSystemMessage(tText("Files saved successfully!"))
+        src.sendSystemMessage(tTxt("Files saved successfully!"))
 
         return 1
     }
 
     private fun info(c: CommandContext<ServerCommandSource>): Int {
-        c.source.sendSystemMessage(tText("Info"))
+        c.source.sendSystemMessage(tTxt("Info"))
 
         return 1
     }
 
     private fun help(c: CommandContext<ServerCommandSource>): Int {
-        c.source.sendSystemMessage(tText("*put help here*"))
+        c.source.sendSystemMessage(tTxt("*put help here*"))
 
         return 1
     }
@@ -81,7 +81,7 @@ object CivilizationCommand {
         val src = c.source
         val world = src.world
         val player = src.player ?: return 0
-        c.source.sendSystemMessage(tText("menu"))
+        src.sendSystemMessage(tTxt("command.civilization.menu"))
 
         return 1
     }

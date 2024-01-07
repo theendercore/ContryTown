@@ -30,11 +30,8 @@ object Util {
     fun getGlobalPath(): Path =
         FabricLoader.getInstance().gameDir.resolve("data").resolve(Civilization.MODID)
 
-    fun tText(text: String, vararg args: Any?): MutableText = Text.literal(text + res(args))
-
-    fun res(vararg args: Any?) = if (args.isEmpty()) "" else args.reduce { a, s -> "$a $s" }
-
-    fun lText(text: String): MutableText = Text.literal(text)
-    fun emptyResult(): Pair<ResultType, MutableText> = Pair(ResultType.SUCCESS, tText("Result!"))
+    fun tTxt(text: String, vararg args: Any): MutableText = Text.translatable(text, *args)
+    fun lTxt(text: String): MutableText = Text.literal(text)
+    fun emptyResult(): Pair<ResultType, MutableText> = Pair(ResultType.SUCCESS, this.tTxt("Result!"))
 
 }
