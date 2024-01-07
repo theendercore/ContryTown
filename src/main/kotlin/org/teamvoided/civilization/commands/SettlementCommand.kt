@@ -97,7 +97,7 @@ object SettlementCommand {
 
         return when (results.first) {
             ResultType.FAIL -> {
-                src.sendError(results.second);
+                src.sendError(results.second)
                 0
             }
 
@@ -116,7 +116,7 @@ object SettlementCommand {
             }
 
             ResultType.SUCCESS -> {
-                src.sendSystemMessage(results.second);
+                src.sendSystemMessage(results.second)
                 1
             }
         }
