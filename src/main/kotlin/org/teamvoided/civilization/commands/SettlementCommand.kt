@@ -6,14 +6,17 @@ import net.minecraft.command.argument.MessageArgumentType
 import net.minecraft.server.command.CommandManager.argument
 import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.server.command.ServerCommandSource
+import net.minecraft.text.ClickEvent
+import net.minecraft.text.HoverEvent
 import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType.settlementArg
 import org.teamvoided.civilization.data.Settlement
 import org.teamvoided.civilization.data.SettlementManager
-import org.teamvoided.civilization.util.Util.emptyResult
-import org.teamvoided.civilization.util.Util.lText
-import org.teamvoided.civilization.util.Util.tText
+import org.teamvoided.civilization.util.ResultType
+import org.teamvoided.civilization.util.Util.lTxt
+import org.teamvoided.civilization.util.Util.tTxt
 
 object SettlementCommand {
     fun init(dispatcher: CommandDispatcher<ServerCommandSource>) {
@@ -30,8 +33,11 @@ object SettlementCommand {
         val deleteNode = literal("delete").build()
         settlementNode.addChild(deleteNode)
         val deleteNodeNameArg = settlementArg("name")
-            .executes { deleteSettlement(it, SettlementArgumentType.getSettlement(it, "name")) }.build()
+            .executes { deleteSettlement(it, SettlementArgumentType.getSettlement(it, "name"), false) }.build()
         deleteNode.addChild(deleteNodeNameArg)
+        val deleteNodeNameArgConfirmArg = literal("confirm")
+            .executes { deleteSettlement(it, SettlementArgumentType.getSettlement(it, "name"), true) }.build()
+        deleteNodeNameArg.addChild(deleteNodeNameArgConfirmArg)
 
         val listNode = literal("list").executes(::list).build()
         settlementNode.addChild(listNode)
@@ -79,36 +85,59 @@ object SettlementCommand {
         return 1
     }
 
-    private fun deleteSettlement(c: CommandContext<ServerCommandSource>, settlement: Settlement): Int {
+    private fun deleteSettlement(
+        c: CommandContext<ServerCommandSource>,
+        settlement: Settlement,
+        confirm: Boolean
+    ): Int {
         val src = c.source
         val player = src.player ?: return 0
-        val results = emptyResult()
-//            SettlementManager.removeSettlement(settlement)
+        val results = SettlementManager.removeSettlement(settlement, player, confirm)
 
-        if (results.first.didFail()) {
-            src.sendError(results.second)
-            return 0
+
+        return when (results.first) {
+            ResultType.FAIL -> {
+                src.sendError(results.second);
+                0
+            }
+
+            ResultType.LOGIC -> {
+                src.sendSystemMessage(results.second)
+                src.sendSystemMessage(tTxt("To delete write /settlement delete confirm")
+                    .styled {
+                        it.withFormatting(Formatting.GRAY, Formatting.ITALIC)
+                        .withClickEvent(
+                            ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/settlement delete confirm")
+                        )
+                        .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, tTxt("Click to run!")))
+                    }
+                )
+                0
+            }
+
+            ResultType.SUCCESS -> {
+                src.sendSystemMessage(results.second);
+                1
+            }
         }
-        src.sendSystemMessage(results.second)
-        return 1
     }
 
     private fun list(c: CommandContext<ServerCommandSource>): Int {
         val settlements = SettlementManager.getAllSettlement()
         if (settlements.isEmpty()) {
-            c.source.sendSystemMessage(tText("No settlements exists!"))
+            c.source.sendSystemMessage(tTxt("No settlements exists!"))
             return 0
         }
-        c.source.sendSystemMessage(tText("Settlements:"))
-        for (setl in settlements) c.source.sendSystemMessage(lText(" - ${setl.name}"))
+        c.source.sendSystemMessage(tTxt("Settlements:"))
+        for (setl in settlements) c.source.sendSystemMessage(lTxt(" - ${setl.name}"))
 
         return 1
     }
 
 
     private fun info(c: CommandContext<ServerCommandSource>, settlement: Settlement): Int {
-        c.source.sendSystemMessage(tText("TEST:"))
-        c.source.sendSystemMessage(tText(settlement.toString()))
+        c.source.sendSystemMessage(tTxt("TEST:"))
+        c.source.sendSystemMessage(tTxt(settlement.toString()))
         return 1
     }
 
@@ -147,7 +176,7 @@ object SettlementCommand {
         val src = c.source
         val world = src.world
         val player = src.player ?: return 0
-        src.sendSystemMessage(tText("gui"))
+        src.sendSystemMessage(tTxt("gui"))
         return 1
     }
 

@@ -52,10 +52,10 @@ object SquaremapIntegrations {
 
         val marker: Marker = Marker.polygon(unionS.coordinates.map { Point.of(it.x, it.y) })
 
-        val nation = if (settlement.nation != null) NationManager.getById(settlement.nation!!)!!.name else ""
+        val nation = if (settlement.nation != null) "Nation: ${NationManager.getById(settlement.nation!!)!!.name}" else ""
 
         marker.markerOptions(
-            MarkerOptions.builder().hoverTooltip("${settlement.name}</br>$nation").strokeColor(Color.YELLOW).strokeOpacity(0.8)
+            MarkerOptions.builder().hoverTooltip("<b>${settlement.name}</b></br>$nation").strokeColor(Color.YELLOW).strokeOpacity(0.8)
                 .strokeWeight(3).fillColor(Color.YELLOW).fillOpacity(0.2).build()
         )
         markerLayers[settlement.dimension.toString()]!!.addMarker(

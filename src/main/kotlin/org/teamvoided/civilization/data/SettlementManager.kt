@@ -14,7 +14,7 @@ import org.teamvoided.civilization.util.BasicDirection
 import org.teamvoided.civilization.util.ResultType
 import org.teamvoided.civilization.util.Util
 import org.teamvoided.civilization.util.Util.getWorldPath
-import org.teamvoided.civilization.util.Util.tText
+import org.teamvoided.civilization.util.Util.tTxt
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
@@ -39,50 +39,68 @@ object SettlementManager {
         name: String, player: ServerPlayerEntity, chunkPos: ChunkPos, capitalPos: BlockPos, dimension: Identifier
     ): Pair<ResultType, Text> {
         val leader = player.uuid
-        val data = PlayerDataManager.getData(player)
+        val data = PlayerDataManager.getDataD(player)
         if (data != null && data.settlements.isNotEmpty()) return Pair(
-            ResultType.FAIL, tText("You are in a settlement you cant crete a new one!")
+            ResultType.FAIL, tTxt("You are in a settlement you cant crete a new one!")
         )
         if (!canCreateSettlementInDim(dimension)) return Pair(
-            ResultType.FAIL, tText("Can't settle in this dimension")
+            ResultType.FAIL, tTxt("Can't settle in this dimension")
         )
         if (getSettledChunks().contains(chunkPos)) return Pair(
-            ResultType.FAIL, tText("This chunk has been settled already!")
+            ResultType.FAIL, tTxt("This chunk has been settled already!")
         )
         val id = UUID.randomUUID()
         val newSet = Settlement(id, name, leader, chunkPos, capitalPos, dimension)
         settlements.add(newSet)
 
-        PlayerDataManager.setData(
+        PlayerDataManager.setDataD(
             player, PlayerDataManager.PlayerData(mapOf(Pair(newSet.id, PlayerDataManager.Role.LEADER)))
         )
         WebMaps.addSettlement(newSet)
-        return Pair(ResultType.SUCCESS, tText("Successfully created a base!"))
+        return Pair(ResultType.SUCCESS, tTxt("Successfully created a base!"))
+    }
+
+    fun removeSettlement(settlement: Settlement, player: ServerPlayerEntity, confirmed: Boolean): Pair<ResultType, Text> {
+        if (settlement.leader != player.uuid) return Pair(
+            ResultType.FAIL, tTxt("Only the leader can delete the settlement!")
+        )
+
+        if (!confirmed) return Pair(
+                ResultType.LOGIC, tTxt("Are you sure you want to delete the claim?")
+        )
+
+        settlements.remove(settlement)
+        WebMaps.removeSettlement(settlement)
+        PlayerDataManager.clearD(player)
+        return Pair(ResultType.SUCCESS,
+            tTxt("Successfully delete a settlement %s!", settlement.name)
+        )
     }
 
     fun addChunk(settlement: Settlement, pos: ChunkPos): Pair<ResultType, Text> {
         if (getSettledChunks().contains(pos)) return Pair(
-            ResultType.FAIL, tText("This chunk has been settled already!")
+            ResultType.FAIL, tTxt("This chunk has been settled already!")
         )
         val neighbors = getChunkNeighbours(pos).map { it.first }
-        if (neighbors.isEmpty()) return Pair(
-            ResultType.FAIL, tText("This chunk isn't connected to any settlements! Try /settlement hamlet")
+        if (!neighbors.contains(settlement.id)) return Pair(
+            ResultType.FAIL,
+            tTxt("This chunk isn't connected to any settlements! If you want to make a separate claim do /settlement hamlet")
         )
         settlement.chunks.add(pos)
         updateSettlement(settlement)
         WebMaps.modifySettlement(settlement)
-        return Pair(ResultType.SUCCESS, tText("Chunk successfully added!"))
+        return Pair(ResultType.SUCCESS, tTxt("Chunk successfully added!"))
     }
 
     fun removeChunk(settlement: Settlement, pos: ChunkPos): Pair<ResultType, Text> {
         if (!getSettledChunks().contains(pos)) return Pair(
-            ResultType.FAIL, tText("This chunk isn't part of your settlement!")
+            ResultType.FAIL, tTxt("This chunk isn't part of your settlement!")
         )
 
         settlement.chunks.remove(pos)
         updateSettlement(settlement)
         WebMaps.modifySettlement(settlement)
-        return Pair(ResultType.SUCCESS, tText("Chunk successfully removed!"))
+        return Pair(ResultType.SUCCESS, tTxt("Chunk successfully removed!"))
     }
 
     fun updateSettlement(settlement: Settlement) {
