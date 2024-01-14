@@ -1,7 +1,9 @@
 package org.teamvoided.civilization.commands
 
+import com.mojang.authlib.GameProfile
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.context.CommandContext
+import net.minecraft.command.argument.GameProfileArgumentType
 import net.minecraft.command.argument.MessageArgumentType
 import net.minecraft.server.command.CommandManager.argument
 import net.minecraft.server.command.CommandManager.literal
@@ -12,6 +14,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType.settlementArg
+import org.teamvoided.civilization.data.PlayerDataManager.getSettlements
 import org.teamvoided.civilization.data.Settlement
 import org.teamvoided.civilization.data.SettlementManager
 import org.teamvoided.civilization.util.ResultType
@@ -30,6 +33,7 @@ object SettlementCommand {
             .executes { createSettlement(it, MessageArgumentType.getMessage(it, "name")) }.build()
         createNode.addChild(createNodeNameArg)
 
+
         val deleteNode = literal("delete").build()
         settlementNode.addChild(deleteNode)
         val deleteNodeNameArg = settlementArg("name")
@@ -39,8 +43,10 @@ object SettlementCommand {
             .executes { deleteSettlement(it, SettlementArgumentType.getSettlement(it, "name"), true) }.build()
         deleteNodeNameArg.addChild(deleteNodeNameArgConfirmArg)
 
+
         val listNode = literal("list").executes(::list).build()
         settlementNode.addChild(listNode)
+
 
         val infoNode = literal("info").build()
         settlementNode.addChild(infoNode)
@@ -48,17 +54,28 @@ object SettlementCommand {
             .executes { info(it, SettlementArgumentType.getSettlement(it, "name")) }.build()
         infoNode.addChild(infoNodeNameArg)
 
-        val claimNode = literal("claim").build()
+
+        val claimNode = literal("claim").executes(::claim).build()
         settlementNode.addChild(claimNode)
         val claimNodeNameArg = settlementArg("name")
             .executes { claim(it, SettlementArgumentType.getSettlement(it, "name")) }.build()
         claimNode.addChild(claimNodeNameArg)
+
 
         val desertNode = literal("desert").build()
         settlementNode.addChild(desertNode)
         val desertNodeNameArg = settlementArg("name")
             .executes { desert(it, SettlementArgumentType.getSettlement(it, "name")) }.build()
         desertNode.addChild(desertNodeNameArg)
+
+        val inviteNode = literal("invite").build()
+        val desertNodePlayerArg = argument("name", GameProfileArgumentType.gameProfile())
+            .executes { invite(it, GameProfileArgumentType.getProfileArgument(it, "name")) }.build()
+        inviteNode.addChild(desertNodePlayerArg)
+        settlementNode.addChild(inviteNode)
+        val inviteAcceptNode = literal("accept").executes(::acceptInvite).build()
+        inviteNode.addChild(inviteAcceptNode)
+
 
         val menuNode = literal("menu").executes(::menu).build()
         settlementNode.addChild(menuNode)
@@ -79,16 +96,16 @@ object SettlementCommand {
         )
         if (results.first.didFail()) {
             src.sendError(results.second)
+
             return 0
         }
         src.sendSystemMessage(results.second)
+
         return 1
     }
 
     private fun deleteSettlement(
-        c: CommandContext<ServerCommandSource>,
-        settlement: Settlement,
-        confirm: Boolean
+        c: CommandContext<ServerCommandSource>, settlement: Settlement, confirm: Boolean
     ): Int {
         val src = c.source
         val player = src.player ?: return 0
@@ -125,6 +142,7 @@ object SettlementCommand {
         val settlements = SettlementManager.getAllSettlement()
         if (settlements.isEmpty()) {
             c.source.sendSystemMessage(tTxt("No settlements exists!"))
+
             return 0
         }
         c.source.sendSystemMessage(tTxt("Settlements:"))
@@ -136,21 +154,27 @@ object SettlementCommand {
     private fun info(c: CommandContext<ServerCommandSource>, settlement: Settlement): Int {
         c.source.sendSystemMessage(tTxt("TEST:"))
         c.source.sendSystemMessage(tTxt(settlement.toString()))
+
         return 1
     }
 
-    private fun claim(c: CommandContext<ServerCommandSource>, settlement: Settlement): Int {
+    private fun claim(c: CommandContext<ServerCommandSource>): Int = claim(c, null)
+    private fun claim(c: CommandContext<ServerCommandSource>, settlement: Settlement?): Int {
         val src = c.source
         val world = src.world
         val player = src.player ?: return 0
 
-        val results = SettlementManager.addChunk(settlement, world.getChunk(player.blockPos).pos)
+        val validSettlement = settlement ?: player.getSettlements()?.first() ?: return 0
+
+        val results = SettlementManager.addChunk(validSettlement, world.getChunk(player.blockPos).pos)
 
         if (results.first.didFail()) {
             src.sendError(results.second)
+
             return 0
         }
         src.sendSystemMessage(results.second)
+
         return 1
     }
 
@@ -163,9 +187,51 @@ object SettlementCommand {
 
         if (results.first.didFail()) {
             src.sendError(results.second)
+
             return 0
         }
         src.sendSystemMessage(results.second)
+
+        return 1
+    }
+
+    private fun invite(c: CommandContext<ServerCommandSource>, gameProfiles: Collection<GameProfile>): Int {
+        val src = c.source
+        val player = src.player ?: return 0
+        var count = 0
+
+        val settlement = player.getSettlements()?.first()
+
+        if (settlement == null) {
+            src.sendError(tTxt("You are not in a settlement!"))
+
+            return 0
+        }
+        gameProfiles.forEach {
+            SettlementManager.addInvites(it.id, settlement)
+            count++
+        }
+        src.sendSystemMessage(
+            if (gameProfiles.size > 1) tTxt("An invite has been sent to %s players!", count)
+            else tTxt("An invite has been sent to %s!", gameProfiles.first().name)
+        )
+
+        return 1
+    }
+
+    private fun acceptInvite(c: CommandContext<ServerCommandSource>): Int {
+        val src = c.source
+        val player = src.player ?: return 0
+
+        val invites = SettlementManager.getInvites(player.uuid)
+        if (invites == null) {
+            src.sendSystemMessage(tTxt("No pending invites!"))
+            return 0
+        }
+        val setl = invites.first()
+        SettlementManager.addCitizen(player, setl)
+        src.sendSystemMessage(tTxt("You have joined %s settlement!", setl.name))
+
         return 1
     }
 
@@ -174,6 +240,7 @@ object SettlementCommand {
         val world = src.world
         val player = src.player ?: return 0
         src.sendSystemMessage(tTxt("gui"))
+
         return 1
     }
 

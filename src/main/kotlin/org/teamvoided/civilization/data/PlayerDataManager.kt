@@ -12,14 +12,25 @@ object PlayerDataManager {
     fun init() {
         PlayerDataApi.register(PLAYER_DATA)
     }
-//    Refactor this later && fix the usages to not re write data every time
+
+
+    fun ServerPlayerEntity.getSettlements(role: Role = Role.LEADER): List<Settlement>? {
+        val data = getDataD(this) ?: return null
+        val settlement =
+            data.settlements.filterValues { it == role }.keys.mapNotNull { SettlementManager.getById(it) }
+
+        return settlement.ifEmpty { null }
+    }
+
+    //    Refactor this later && fix the usages to not re-write data every time
     fun getDataD(player: ServerPlayerEntity): PlayerData? = PlayerDataApi.getCustomDataFor(player, PLAYER_DATA)
     fun setDataD(player: ServerPlayerEntity, data: PlayerData) =
         PlayerDataApi.setCustomDataFor(player, PLAYER_DATA, data)
 
+
     fun clearD(player: ServerPlayerEntity) = PlayerDataApi.setCustomDataFor(player, PLAYER_DATA, null)
 
-    data class PlayerData(val settlements: Map<UUID, Role>, val nations: Map<UUID, Role>? = null)
+    data class PlayerData(val settlements: MutableMap<UUID, Role>, val nations: Map<UUID, Role>? = null)
 
     enum class Role { CITIZEN, COUNCIL_DELEGATE, LEADER }
 }

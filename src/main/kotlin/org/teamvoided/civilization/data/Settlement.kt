@@ -9,16 +9,16 @@ import org.teamvoided.civilization.serializers.ChunkPosSerializer
 import org.teamvoided.civilization.serializers.IdentifierSerializer
 import org.teamvoided.civilization.serializers.UUIDSerializer
 import org.teamvoided.civilization.util.Util
-import java.util.UUID
+import java.util.*
 
 @Serializable
 data class Settlement(
     @Serializable(with = UUIDSerializer::class) val id: UUID,
     val name: String,
     val nameId: String,
-    val type: SettlementType,
-    val citizens: MutableSet<@Serializable(with = UUIDSerializer::class) UUID>,
-    val chunks: MutableSet<@Serializable(with = ChunkPosSerializer::class) ChunkPos>,
+    private var type: SettlementType,
+    private val citizens: MutableSet<@Serializable(with = UUIDSerializer::class) UUID>,
+    private val chunks: MutableSet<@Serializable(with = ChunkPosSerializer::class) ChunkPos>,
     val hamlets: MutableSet<@Serializable(with = UUIDSerializer::class) UUID>?,
     val isHamlet: Boolean,
     @Serializable(with = UUIDSerializer::class) var nation: UUID?,
@@ -51,6 +51,41 @@ data class Settlement(
         dimension
     )
 
+    fun getChunks(): List<ChunkPos> = chunks.toList()
+    fun addChunk(pos: ChunkPos) = chunks.add(pos)
+    fun removeChunk(pos: ChunkPos) = chunks.remove(pos)
+    fun clearChunks() {
+        chunks.clear()
+        //make it read the center chunk
+    }
+
+    fun getCitizens(): List<UUID> = citizens.toList()
+    fun addCitizen(pos: UUID) {
+        citizens.add(pos)
+        updateType()
+    }
+
+    fun removeCitizen(pos: UUID) {
+        citizens.remove(pos)
+        updateType()
+    }
+
+    fun clearCitizens() {
+        citizens.clear()
+        citizens.add(leader)
+    }
+
+    fun getType(): SettlementType = type
+    private fun updateType() {
+        val newType = when (citizens.size) {
+            in 0..2 -> SettlementType.BASE
+            in 3..5 -> SettlementType.TOWN
+            in 6..Int.MAX_VALUE -> SettlementType.CITY
+            else -> null
+        }
+        if (newType != null) type = newType
+    }
+
     fun formatId(): String = this.id.toString().lowercase()
     override fun toString(): String {
         return "id - ${this.id}\n" +
@@ -69,5 +104,5 @@ data class Settlement(
     }
 
     @Serializable
-    enum class SettlementType { BASE, CAMP, TOWN, CITY }
+    enum class SettlementType { BASE, TOWN, CITY }
 }

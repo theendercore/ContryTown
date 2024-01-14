@@ -4,7 +4,7 @@
   "package": "org.teamvoided.civilization.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "Template"
+    "MinecraftServerMixin"
   ],
   "client": [
   ],

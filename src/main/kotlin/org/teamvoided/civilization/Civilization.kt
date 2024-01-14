@@ -21,10 +21,10 @@ object Civilization {
     val DEV_ENV = FabricLoader.getInstance().isDevelopmentEnvironment
 
     @JvmField
-    val LOGGER: Logger = LoggerFactory.getLogger(Civilization::class.simpleName)
+    val log: Logger = LoggerFactory.getLogger(Civilization::class.simpleName)
 
     fun commonInit() {
-        LOGGER.info("Hello from Common")
+        log.info("Hello from Common")
         Util.getGlobalPath().toFile().mkdirs()
         CivCommands.init()
         PlayerDataManager.init()
@@ -34,9 +34,7 @@ object Civilization {
     fun id(path: String) = Identifier(MODID, path)
 
     private fun afterServerLoads(server: MinecraftServer) {
-        for (world in server.worlds) {
-            Util.getWorldPath(server, world).toFile().mkdirs()
-        }
+        for (world in server.worlds) Util.getWorldPath(server, world).toFile().mkdirs()
 
         SettlementManager.postServerInit(server)
         NationManager.postServerInit(server)

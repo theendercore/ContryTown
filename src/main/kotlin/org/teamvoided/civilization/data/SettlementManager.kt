@@ -8,7 +8,7 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.world.World
-import org.teamvoided.civilization.Civilization.LOGGER
+import org.teamvoided.civilization.Civilization.log
 import org.teamvoided.civilization.compat.WebMaps
 import org.teamvoided.civilization.util.BasicDirection
 import org.teamvoided.civilization.util.ResultType
@@ -24,16 +24,21 @@ import java.util.*
 @Suppress("MemberVisibilityCanBePrivate")
 object SettlementManager {
     private val settlements: MutableList<Settlement> = mutableListOf()
-    private var canReadFiles = true
+    private val invitesList: MutableMap<UUID, MutableList<UUID>> = mutableMapOf()   //Player - <Settlements>
+    private var canReadFiles: MutableList<Identifier> = mutableListOf() //World Identifier
     fun postServerInit(server: MinecraftServer) {
         for (world in server.worlds) load(server, world)
+    }
+
+    fun saveAll(server: MinecraftServer) {
+        for (world in server.worlds) save(server, world)
     }
 
     @Suppress("unused")
     fun getById(id: UUID): Settlement? = settlements.find { it.id == id }
     fun getByName(name: String): Settlement? = settlements.find { it.nameId == name }
     fun getSettledChunks(): Map<ChunkPos, UUID> =
-        settlements.flatMap { set -> set.chunks.map { Pair(it, set.id) } }.toMap()
+        settlements.flatMap { set -> set.getChunks().map { Pair(it, set.id) } }.toMap()
 
     fun addSettlement(
         name: String, player: ServerPlayerEntity, chunkPos: ChunkPos, capitalPos: BlockPos, dimension: Identifier
@@ -54,25 +59,28 @@ object SettlementManager {
         settlements.add(newSet)
 
         PlayerDataManager.setDataD(
-            player, PlayerDataManager.PlayerData(mapOf(Pair(newSet.id, PlayerDataManager.Role.LEADER)))
+            player, PlayerDataManager.PlayerData(mutableMapOf(Pair(newSet.id, PlayerDataManager.Role.LEADER)))
         )
         WebMaps.addSettlement(newSet)
         return Pair(ResultType.SUCCESS, tTxt("Successfully created a base!"))
     }
 
-    fun removeSettlement(settlement: Settlement, player: ServerPlayerEntity, confirmed: Boolean): Pair<ResultType, Text> {
+    fun removeSettlement(
+        settlement: Settlement, player: ServerPlayerEntity, confirmed: Boolean
+    ): Pair<ResultType, Text> {
         if (settlement.leader != player.uuid) return Pair(
             ResultType.FAIL, tTxt("Only the leader can delete the settlement!")
         )
 
         if (!confirmed) return Pair(
-                ResultType.LOGIC, tTxt("Are you sure you want to delete the claim?")
+            ResultType.LOGIC, tTxt("Are you sure you want to delete the claim?")
         )
 
         settlements.remove(settlement)
         WebMaps.removeSettlement(settlement)
         PlayerDataManager.clearD(player)
-        return Pair(ResultType.SUCCESS,
+        return Pair(
+            ResultType.SUCCESS,
             tTxt("Successfully delete a settlement %s!", settlement.name)
         )
     }
@@ -86,7 +94,7 @@ object SettlementManager {
             ResultType.FAIL,
             tTxt("This chunk isn't connected to any settlements! If you want to make a separate claim do /settlement hamlet")
         )
-        settlement.chunks.add(pos)
+        settlement.addChunk(pos)
         updateSettlement(settlement)
         WebMaps.modifySettlement(settlement)
         return Pair(ResultType.SUCCESS, tTxt("Chunk successfully added!"))
@@ -97,7 +105,7 @@ object SettlementManager {
             ResultType.FAIL, tTxt("This chunk isn't part of your settlement!")
         )
 
-        settlement.chunks.remove(pos)
+        settlement.removeChunk(pos)
         updateSettlement(settlement)
         WebMaps.modifySettlement(settlement)
         return Pair(ResultType.SUCCESS, tTxt("Chunk successfully removed!"))
@@ -109,6 +117,43 @@ object SettlementManager {
 
     fun getAllSettlement(): List<Settlement> {
         return settlements.toList()
+    }
+
+    fun getInvites(player: UUID): List<Settlement>? {
+        val invites = invitesList[player] ?: return null
+        return invites.mapNotNull { getById(it) }
+    }
+
+    fun addInvites(player: UUID, settlement: Settlement) {
+        if (invitesList[player] == null) invitesList[player] = mutableListOf(settlement.id)
+        invitesList[player]?.add(settlement.id)
+    }
+
+    fun addCitizen(player: ServerPlayerEntity, settlement: Settlement) {
+        settlement.addCitizen(player.uuid)
+        updateSettlement(settlement)
+
+        val data = PlayerDataManager.getDataD(player)
+        PlayerDataManager.setDataD(
+            player,
+            if (data == null)
+                PlayerDataManager.PlayerData(mutableMapOf(Pair(settlement.id, PlayerDataManager.Role.CITIZEN)))
+            else {
+                data.settlements[settlement.id] = PlayerDataManager.Role.CITIZEN
+                data
+            }
+        )
+    }
+
+    fun removeCitizen(player: ServerPlayerEntity, settlement: Settlement) {
+        settlement.removeCitizen(player.uuid)
+        updateSettlement(settlement)
+
+        val data = PlayerDataManager.getDataD(player) ?: return
+        println(data)
+        data.settlements.remove(settlement.id)
+        println(data)
+        PlayerDataManager.setDataD(player, data)
     }
 
     fun getChunkNeighbours(pos: ChunkPos): List<Triple<UUID, ChunkPos, BasicDirection>> {
@@ -125,38 +170,42 @@ object SettlementManager {
     }
 
     fun save(server: MinecraftServer, world: World): Int {
-        if (canReadFiles) {
-            canReadFiles = false
+        val id = world.registryKey.value
+        if (!canReadFiles.contains(id)) {
+            canReadFiles.add(id)
             Thread {
                 try {
                     FileWriter(getSettlementSaveFile(server, world)).use {
                         it.write(Util.json.encodeToString(ListSerializer(Settlement.serializer()), settlements))
                     }
+                    log.info("Successfully saved {} worlds Settlements!", id)
                 } catch (e: Exception) {
-                    LOGGER.error("Failed to save Settlements to file! \n {}", e.stackTrace)
+                    log.error("Failed to save Settlements to file! \n {}", e.stackTrace)
                 }
-                canReadFiles = true
+                canReadFiles.remove(id)
             }.start()
         } else {
-            LOGGER.warn("Tired to write Settlement files when couldn't!")
+            log.warn("Tired to write Settlement files when couldn't!")
             return 0
         }
         return 1
     }
 
     fun load(server: MinecraftServer, world: World): Int {
-        if (canReadFiles) {
-            canReadFiles = false
+        val id = world.registryKey.value
+        if (!canReadFiles.contains(id))  {
+            canReadFiles.add(id)
             try {
                 val stringData = FileReader(getSettlementSaveFile(server, world)).use { it.readText() }
                 settlements.clear()
                 settlements.addAll(Util.json.decodeFromString(ListSerializer(Settlement.serializer()), stringData))
+                log.info("Successfully read {} worlds Settlements!", id)
             } catch (e: Exception) {
-                LOGGER.error("Failed to read Settlements from file! \n {}", e.stackTrace)
+                log.error("Failed to read Settlements from file! \n {}", e.stackTrace)
             }
-            canReadFiles = true
+            canReadFiles.remove(id)
         } else {
-            LOGGER.warn("Tired to read Settlement files when couldn't!")
+            log.warn("Tired to read Settlement files when couldn't!")
             return 0
         }
         return 1

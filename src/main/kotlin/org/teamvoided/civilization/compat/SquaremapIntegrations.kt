@@ -46,7 +46,7 @@ object SquaremapIntegrations {
     fun addSettlementMarker(settlement: Settlement) {
         if (markerLayers.isEmpty()) return
 
-        val polys = settlement.chunks.map { GeometryFactory().createPolygon(it.toCordArray()) }
+        val polys = settlement.getChunks().map { GeometryFactory().createPolygon(it.toCordArray()) }
         var unionS: Geometry = polys.first()
         polys.forEachIndexed { i, poly -> if (i != 0) unionS = unionS.union(poly) }
 

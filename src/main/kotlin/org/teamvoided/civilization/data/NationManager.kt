@@ -4,7 +4,7 @@ import kotlinx.serialization.builtins.ListSerializer
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
-import org.teamvoided.civilization.Civilization.LOGGER
+import org.teamvoided.civilization.Civilization.log
 import org.teamvoided.civilization.compat.WebMaps
 import org.teamvoided.civilization.util.ResultType
 import org.teamvoided.civilization.util.Util
@@ -70,13 +70,14 @@ object NationManager {
                     FileWriter(getNationSaveFile()).use {
                         it.write(Util.json.encodeToString(ListSerializer(Nation.serializer()), nations))
                     }
+                    log.info("Successfully saved Nations!")
                 } catch (e: Exception) {
-                    LOGGER.error("Failed to save Nations to file! \n {}", e.stackTrace)
+                    log.error("Failed to save Nations to file! \n {}", e.stackTrace)
                 }
                 canReadFiles = true
             }.start()
         } else {
-            LOGGER.warn("Tired to write Nation files when couldn't!")
+            log.warn("Tired to write Nation files when couldn't!")
             return 0
         }
         return 1
@@ -90,11 +91,11 @@ object NationManager {
                 nations.clear()
                 nations.addAll(Util.json.decodeFromString(ListSerializer(Nation.serializer()), stringData))
             } catch (e: Exception) {
-                LOGGER.error("Failed to read Nations from file! \n {}", e.stackTrace)
+                log.error("Failed to read Nations from file! \n {}", e.stackTrace)
             }
             canReadFiles = true
         } else {
-            LOGGER.warn("Tired to read Nation files when couldn't!")
+            log.warn("Tired to read Nation files when couldn't!")
             return 0
         }
         return 1
