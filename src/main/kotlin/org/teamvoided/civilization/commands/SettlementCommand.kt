@@ -68,13 +68,21 @@ object SettlementCommand {
             .executes { desert(it, SettlementArgumentType.getSettlement(it, "name")) }.build()
         desertNode.addChild(desertNodeNameArg)
 
+
         val inviteNode = literal("invite").build()
-        val desertNodePlayerArg = argument("name", GameProfileArgumentType.gameProfile())
-            .executes { invite(it, GameProfileArgumentType.getProfileArgument(it, "name")) }.build()
-        inviteNode.addChild(desertNodePlayerArg)
         settlementNode.addChild(inviteNode)
+        val inviteNodePlayerArg = argument("name", GameProfileArgumentType.gameProfile())
+            .executes { invite(it, GameProfileArgumentType.getProfileArgument(it, "name")) }.build()
+        inviteNode.addChild(inviteNodePlayerArg)
         val inviteAcceptNode = literal("accept").executes(::acceptInvite).build()
         inviteNode.addChild(inviteAcceptNode)
+
+
+        val kickNode = literal("kick").build()
+        settlementNode.addChild(kickNode)
+        val kickNodePlayerArg = argument("name", GameProfileArgumentType.gameProfile())
+            .executes { kick(it, GameProfileArgumentType.getProfileArgument(it, "name")) }.build()
+        kickNode.addChild(kickNodePlayerArg)
 
 
         val menuNode = literal("menu").executes(::menu).build()
@@ -164,7 +172,12 @@ object SettlementCommand {
         val world = src.world
         val player = src.player ?: return 0
 
-        val validSettlement = settlement ?: player.getSettlements()?.first() ?: return 0
+        val validSettlement = settlement ?: player.getSettlements()?.first()
+        if (validSettlement == null) {
+            src.sendError(tTxt("You are not the leader of a Settlement!"))
+
+            return 0
+        }
 
         val results = SettlementManager.addChunk(validSettlement, world.getChunk(player.blockPos).pos)
 
@@ -231,6 +244,31 @@ object SettlementCommand {
         val setl = invites.first()
         SettlementManager.addCitizen(player, setl)
         src.sendSystemMessage(tTxt("You have joined %s settlement!", setl.name))
+
+        return 1
+    }
+
+    private fun kick(c: CommandContext<ServerCommandSource>, gameProfiles: Collection<GameProfile>): Int {
+        val src = c.source
+        val player = src.player ?: return 0
+        var count = 0
+
+        val settlement = player.getSettlements()?.first()
+
+        if (settlement == null) {
+            src.sendError(tTxt("You are not in a settlement!"))
+
+            return 0
+        }
+        for (it in gameProfiles) {
+            val kickedPlayer = src.server.playerManager.getPlayer(it.id) ?: continue
+            SettlementManager.removeCitizen(kickedPlayer, settlement)
+            count++
+        }
+        src.sendSystemMessage(
+            if (gameProfiles.size > 1) tTxt("%s players have been kicked from the Settlement!", count)
+            else tTxt("%s has been kicked from the Settlement", gameProfiles.first().name)
+        )
 
         return 1
     }

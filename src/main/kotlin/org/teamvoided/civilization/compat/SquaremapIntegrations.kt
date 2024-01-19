@@ -14,6 +14,7 @@ import xyz.jpenilla.squaremap.api.SquaremapProvider
 import xyz.jpenilla.squaremap.api.marker.Marker
 import xyz.jpenilla.squaremap.api.marker.MarkerOptions
 import java.awt.Color
+import kotlin.random.Random
 
 
 object SquaremapIntegrations {
@@ -21,6 +22,9 @@ object SquaremapIntegrations {
     private val markerLayers = HashMap<String, SimpleLayerProvider>()
     private const val MARKER_ID = "civilization"
     private const val LABEL = "Civilization"
+
+    private val random = Random(13845)
+
     fun reg() {
         val api = SquaremapProvider.get()
         for (level in api.mapWorlds()) {
@@ -52,11 +56,15 @@ object SquaremapIntegrations {
 
         val marker: Marker = Marker.polygon(unionS.coordinates.map { Point.of(it.x, it.y) })
 
-        val nation = if (settlement.nation != null) "Nation: ${NationManager.getById(settlement.nation!!)!!.name}" else ""
 
         marker.markerOptions(
-            MarkerOptions.builder().hoverTooltip("<b>${settlement.name}</b></br>$nation").strokeColor(Color.YELLOW).strokeOpacity(0.8)
-                .strokeWeight(3).fillColor(Color.YELLOW).fillOpacity(0.2).build()
+            MarkerOptions.builder()
+                .hoverTooltip(generateToolTip(settlement))
+                .strokeColor(Color(random.nextInt()))
+                .strokeOpacity(0.8)
+                .strokeWeight(3)
+                .fillColor(Color(random.nextInt()))
+                .fillOpacity(0.2).build()
         )
         markerLayers[settlement.dimension.toString()]!!.addMarker(
             Key.of(settlement.formatId()), marker
@@ -74,6 +82,29 @@ object SquaremapIntegrations {
         addSettlementMarker(settlement)
     }
 
+    private fun generateToolTip(settlement: Settlement): String {
+        return buildString {
+            append("<h2><b>${settlement.name} (${settlement.getType()})</b></h2>")
+            append("</br>")
+            append("Leader: ${settlement.getCitizens()[settlement.leader]}\n")
+            append("</br>")
+            if (settlement.nation != null) {
+                append("Nation: ${NationManager.getById(settlement.nation!!)!!.name}")
+                append("</br>")
+                if (settlement.isCapital) {
+                    append("Is the capital")
+                    append("</br>")
+                }
+            }
+            append("Citizens: ${settlement.getCitizens().map { it.value }}\n")
+            append("</br>")
+            if (settlement.isHamlet) {
+                append("Hamlet of: %Null%")
+                append("</br>")
+            }
+            append("Center of Setl: ${settlement.center}\n")
+        }
+    }
 
     private fun ChunkPos.toCordArray() = arrayOf(
         cord(this.getOffsetX(16), this.startZ),

@@ -17,7 +17,7 @@ data class Settlement(
     val name: String,
     val nameId: String,
     private var type: SettlementType,
-    private val citizens: MutableSet<@Serializable(with = UUIDSerializer::class) UUID>,
+    private val citizens: MutableMap<@Serializable(with = UUIDSerializer::class) UUID, String>, // UUID - Name
     private val chunks: MutableSet<@Serializable(with = ChunkPosSerializer::class) ChunkPos>,
     val hamlets: MutableSet<@Serializable(with = UUIDSerializer::class) UUID>?,
     val isHamlet: Boolean,
@@ -32,6 +32,7 @@ data class Settlement(
         id: UUID,
         name: String,
         leader: UUID,
+        leaderName: String,
         chunkPos: ChunkPos,
         centerPos: BlockPos,
         dimension: Identifier
@@ -40,7 +41,7 @@ data class Settlement(
         name,
         Util.formatId(name),
         Settlement.SettlementType.BASE,
-        mutableSetOf(leader),
+        mutableMapOf(Pair(leader, leaderName)),
         mutableSetOf(chunkPos),
         null,
         false,
@@ -59,20 +60,21 @@ data class Settlement(
         //make it read the center chunk
     }
 
-    fun getCitizens(): List<UUID> = citizens.toList()
-    fun addCitizen(pos: UUID) {
-        citizens.add(pos)
+    fun getCitizens(): Map<UUID, String> = citizens.toMap()
+    fun addCitizen(cit: UUID, name: String) {
+        citizens[cit] = name
         updateType()
     }
 
-    fun removeCitizen(pos: UUID) {
-        citizens.remove(pos)
+    fun removeCitizen(cit: UUID) {
+        citizens.remove(cit)
         updateType()
     }
 
     fun clearCitizens() {
+        val x = citizens[leader]!!
         citizens.clear()
-        citizens.add(leader)
+        citizens[leader] = x
     }
 
     fun getType(): SettlementType = type
@@ -98,7 +100,7 @@ data class Settlement(
                 "isHamlet - ${this.isHamlet}\n" +
                 "nation - ${this.nation}\n" +
                 "isCapital - ${this.isCapital}\n" +
-                "capital - ${this.center}\n" +
+                "center - ${this.center}\n" +
                 "leader - ${this.leader}\n" +
                 "dimension - ${this.dimension}"
     }

@@ -55,7 +55,7 @@ object SettlementManager {
             ResultType.FAIL, tTxt("This chunk has been settled already!")
         )
         val id = UUID.randomUUID()
-        val newSet = Settlement(id, name, leader, chunkPos, capitalPos, dimension)
+        val newSet = Settlement(id, name, leader, player.name.string, chunkPos, capitalPos, dimension)
         settlements.add(newSet)
 
         PlayerDataManager.setDataD(
@@ -95,8 +95,6 @@ object SettlementManager {
             tTxt("This chunk isn't connected to any settlements! If you want to make a separate claim do /settlement hamlet")
         )
         settlement.addChunk(pos)
-        updateSettlement(settlement)
-        WebMaps.modifySettlement(settlement)
         return Pair(ResultType.SUCCESS, tTxt("Chunk successfully added!"))
     }
 
@@ -107,12 +105,12 @@ object SettlementManager {
 
         settlement.removeChunk(pos)
         updateSettlement(settlement)
-        WebMaps.modifySettlement(settlement)
         return Pair(ResultType.SUCCESS, tTxt("Chunk successfully removed!"))
     }
 
     fun updateSettlement(settlement: Settlement) {
         settlements[settlements.indexOf(settlement)] = settlement
+        WebMaps.modifySettlement(settlement)
     }
 
     fun getAllSettlement(): List<Settlement> {
@@ -130,7 +128,7 @@ object SettlementManager {
     }
 
     fun addCitizen(player: ServerPlayerEntity, settlement: Settlement) {
-        settlement.addCitizen(player.uuid)
+        settlement.addCitizen(player.uuid, player.name.string)
         updateSettlement(settlement)
 
         val data = PlayerDataManager.getDataD(player)
@@ -193,11 +191,13 @@ object SettlementManager {
 
     fun load(server: MinecraftServer, world: World): Int {
         val id = world.registryKey.value
-        if (!canReadFiles.contains(id))  {
+        if (!canReadFiles.contains(id)) {
             canReadFiles.add(id)
             try {
                 val stringData = FileReader(getSettlementSaveFile(server, world)).use { it.readText() }
+                val otherDim = settlements.filter { it.dimension != id }
                 settlements.clear()
+                settlements.addAll(otherDim)
                 settlements.addAll(Util.json.decodeFromString(ListSerializer(Settlement.serializer()), stringData))
                 log.info("Successfully read {} worlds Settlements!", id)
             } catch (e: Exception) {
