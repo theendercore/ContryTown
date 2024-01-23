@@ -21,6 +21,9 @@ object PlayerDataManager {
 
         return settlement.ifEmpty { null }
     }
+    fun ServerPlayerEntity.getRole(setl: Settlement): Role? {
+        return getDataD(this)?.settlements?.get(setl.id)
+    }
 
     //    Refactor this later && fix the usages to not re-write data every time
     fun getDataD(player: ServerPlayerEntity): PlayerData? = PlayerDataApi.getCustomDataFor(player, PLAYER_DATA)

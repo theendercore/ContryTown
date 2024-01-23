@@ -14,6 +14,8 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType.settlementArg
+import org.teamvoided.civilization.data.PlayerDataManager
+import org.teamvoided.civilization.data.PlayerDataManager.getRole
 import org.teamvoided.civilization.data.PlayerDataManager.getSettlements
 import org.teamvoided.civilization.data.Settlement
 import org.teamvoided.civilization.data.SettlementManager
@@ -83,6 +85,12 @@ object SettlementCommand {
         val kickNodePlayerArg = argument("name", GameProfileArgumentType.gameProfile())
             .executes { kick(it, GameProfileArgumentType.getProfileArgument(it, "name")) }.build()
         kickNode.addChild(kickNodePlayerArg)
+
+        val leaveNode = literal("leave").executes { leave(it, null) }.build()
+        settlementNode.addChild(leaveNode)
+        val leaveNodeSetlArg = settlementArg("name")
+            .executes { leave(it, SettlementArgumentType.getSettlement(it, "name")) }.build()
+        leaveNode.addChild(leaveNodeSetlArg)
 
 
         val menuNode = literal("menu").executes(::menu).build()
@@ -243,6 +251,7 @@ object SettlementCommand {
         }
         val setl = invites.first()
         SettlementManager.addCitizen(player, setl)
+        SettlementManager.removeInvite(player.uuid, setl)
         src.sendSystemMessage(tTxt("You have joined %s settlement!", setl.name))
 
         return 1
@@ -273,6 +282,37 @@ object SettlementCommand {
         return 1
     }
 
+
+    private fun leave(c: CommandContext<ServerCommandSource>, settlement: Settlement?): Int {
+        val src = c.source
+        val player = src.player ?: return 0
+
+        val setl = settlement ?: player.getSettlements()?.first()
+
+        if (setl == null) {
+            src.sendError(tTxt("You are not in a settlement!"))
+
+            return 0
+        }
+        val role = player.getRole(setl)
+        if (role == null) {
+            src.sendError(tTxt("You are not in a part of %s settlement!", setl.nameId))
+
+            return 0
+        }
+        if (role == PlayerDataManager.Role.LEADER) {
+            src.sendError(tTxt("You are the leader of the settlement! You cant leave! Run /settlement delete if you want to delete your settlement."))
+
+            return 0
+        }
+
+        SettlementManager.removeCitizen(player, setl)
+        src.sendError(tTxt("You have left the %s settlement!", setl.name))
+
+        return 1
+    }
+
+
     private fun menu(c: CommandContext<ServerCommandSource>): Int {
         val src = c.source
         val world = src.world
@@ -281,5 +321,4 @@ object SettlementCommand {
 
         return 1
     }
-
 }

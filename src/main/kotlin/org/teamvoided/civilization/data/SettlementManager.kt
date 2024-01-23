@@ -127,6 +127,12 @@ object SettlementManager {
         invitesList[player]?.add(settlement.id)
     }
 
+    fun removeInvite(player: UUID, settlement: Settlement): Int? {
+        invitesList[player]?.remove(settlement.id) ?: return null
+
+        return 1
+    }
+
     fun addCitizen(player: ServerPlayerEntity, settlement: Settlement) {
         settlement.addCitizen(player.uuid, player.name.string)
         updateSettlement(settlement)
