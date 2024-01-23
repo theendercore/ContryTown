@@ -21,6 +21,14 @@ object PlayerDataManager {
 
         return settlement.ifEmpty { null }
     }
+
+    fun ServerPlayerEntity.isInSettlement(): Boolean {
+        val data = getDataD(this) ?: return false
+        val settlement = data.settlements.keys.mapNotNull { SettlementManager.getById(it) }
+
+        return settlement.isNotEmpty()
+    }
+
     fun ServerPlayerEntity.getRole(setl: Settlement): Role? {
         return getDataD(this)?.settlements?.get(setl.id)
     }

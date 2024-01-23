@@ -79,6 +79,12 @@ object SettlementCommand {
         val inviteAcceptNode = literal("accept").executes(::acceptInvite).build()
         inviteNode.addChild(inviteAcceptNode)
 
+        val joinNode = literal("join").build()
+        settlementNode.addChild(joinNode)
+        val joinNodeSetlArg = settlementArg("name")
+            .executes { join(it, SettlementArgumentType.getSettlement(it, "name")) }.build()
+        joinNode.addChild(joinNodeSetlArg)
+
 
         val kickNode = literal("kick").build()
         settlementNode.addChild(kickNode)
@@ -106,15 +112,12 @@ object SettlementCommand {
     private fun createSettlement(c: CommandContext<ServerCommandSource>, name: Text): Int {
         val src = c.source
         val world = src.world
-        val player = src.player ?: return 0
+        val player = src.player ?: return src.playerOnly()
         val results = SettlementManager.addSettlement(
             name.string, player, world.getChunk(player.blockPos).pos, player.blockPos, world.registryKey.value
         )
-        if (results.first.didFail()) {
-            src.sendError(results.second)
+        if (results.first.didFail()) return src.endError(results.second)
 
-            return 0
-        }
         src.sendSystemMessage(results.second)
 
         return 1
@@ -124,18 +127,14 @@ object SettlementCommand {
         c: CommandContext<ServerCommandSource>, settlement: Settlement, confirm: Boolean
     ): Int {
         val src = c.source
-        val player = src.player ?: return 0
+        val player = src.player ?: return src.playerOnly()
         val results = SettlementManager.removeSettlement(settlement, player, confirm)
 
         return when (results.first) {
-            ResultType.FAIL -> {
-                src.sendError(results.second)
-                0
-            }
-
+            ResultType.FAIL -> src.endError(results.second)
             ResultType.LOGIC -> {
                 src.sendSystemMessage(results.second)
-                src.sendSystemMessage(tTxt("To delete write /settlement delete confirm")
+                src.endMsg(tTxt("To delete write /settlement delete confirm")
                     .styled {
                         it.withFormatting(Formatting.GRAY, Formatting.ITALIC)
                             .withClickEvent(
@@ -144,25 +143,20 @@ object SettlementCommand {
                             .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, tTxt("Click to run!")))
                     }
                 )
-                0
             }
 
-            ResultType.SUCCESS -> {
-                src.sendSystemMessage(results.second)
-                1
-            }
+            ResultType.SUCCESS -> src.endMsg(results.second)
         }
     }
 
     private fun list(c: CommandContext<ServerCommandSource>): Int {
+        val src = c.source
         val settlements = SettlementManager.getAllSettlement()
-        if (settlements.isEmpty()) {
-            c.source.sendSystemMessage(tTxt("No settlements exists!"))
 
-            return 0
-        }
+        if (settlements.isEmpty()) return src.endMsg("No settlements exists!")
+
         c.source.sendSystemMessage(tTxt("Settlements:"))
-        for (setl in settlements) c.source.sendSystemMessage(lTxt(" - ${setl.name}"))
+        for (setl in settlements) src.sendSystemMessage(lTxt(" - ${setl.name}"))
 
         return 1
     }
@@ -178,22 +172,17 @@ object SettlementCommand {
     private fun claim(c: CommandContext<ServerCommandSource>, settlement: Settlement?): Int {
         val src = c.source
         val world = src.world
-        val player = src.player ?: return 0
+        val player = src.player ?: return src.playerOnly()
 
         val validSettlement = settlement ?: player.getSettlements()?.first()
-        if (validSettlement == null) {
-            src.sendError(tTxt("You are not the leader of a Settlement!"))
+        if (validSettlement == null) return src.endMsg("You are not the leader of a Settlement!")
 
-            return 0
-        }
 
         val results = SettlementManager.addChunk(validSettlement, world.getChunk(player.blockPos).pos)
 
-        if (results.first.didFail()) {
-            src.sendError(results.second)
+        if (results.first.didFail())
+            return src.endError(results.second)
 
-            return 0
-        }
         src.sendSystemMessage(results.second)
 
         return 1
@@ -202,15 +191,13 @@ object SettlementCommand {
     private fun desert(c: CommandContext<ServerCommandSource>, settlement: Settlement): Int {
         val src = c.source
         val world = src.world
-        val player = src.player ?: return 0
+        val player = src.player ?: return src.playerOnly()
 
         val results = SettlementManager.removeChunk(settlement, world.getChunk(player.blockPos).pos)
 
-        if (results.first.didFail()) {
-            src.sendError(results.second)
+        if (results.first.didFail())
+            return src.endError(results.second)
 
-            return 0
-        }
         src.sendSystemMessage(results.second)
 
         return 1
@@ -218,18 +205,17 @@ object SettlementCommand {
 
     private fun invite(c: CommandContext<ServerCommandSource>, gameProfiles: Collection<GameProfile>): Int {
         val src = c.source
-        val player = src.player ?: return 0
+        val player = src.player ?: return src.playerOnly()
         var count = 0
 
-        val settlement = player.getSettlements()?.first()
+        val settlement = player.getSettlements()?.first() ?: return src.notInSettlement()
 
-        if (settlement == null) {
-            src.sendError(tTxt("You are not in a settlement!"))
-
-            return 0
-        }
-        gameProfiles.forEach {
+        for (it in gameProfiles) {
+            if (it.id == player.uuid) continue
             SettlementManager.addInvites(it.id, settlement)
+            src.server.playerManager.getPlayer(it.id)?.sendSystemMessage(
+                tTxt("You have been invited to join %s settlement by %s", settlement.name, player.name)
+            )
             count++
         }
         src.sendSystemMessage(
@@ -242,16 +228,13 @@ object SettlementCommand {
 
     private fun acceptInvite(c: CommandContext<ServerCommandSource>): Int {
         val src = c.source
-        val player = src.player ?: return 0
+        val player = src.player ?: return src.playerOnly()
 
-        val invites = SettlementManager.getInvites(player.uuid)
-        if (invites == null) {
-            src.sendSystemMessage(tTxt("No pending invites!"))
-            return 0
-        }
+        val invites = SettlementManager.getInvites(player.uuid) ?: return src.endMsg("No pending invites!")
+
         val setl = invites.first()
         SettlementManager.addCitizen(player, setl)
-        SettlementManager.removeInvite(player.uuid, setl)
+        SettlementManager.clearInvites(player.uuid)
         src.sendSystemMessage(tTxt("You have joined %s settlement!", setl.name))
 
         return 1
@@ -259,16 +242,11 @@ object SettlementCommand {
 
     private fun kick(c: CommandContext<ServerCommandSource>, gameProfiles: Collection<GameProfile>): Int {
         val src = c.source
-        val player = src.player ?: return 0
+        val player = src.player ?: return src.playerOnly()
         var count = 0
 
-        val settlement = player.getSettlements()?.first()
+        val settlement = player.getSettlements()?.first() ?: return src.notInSettlement()
 
-        if (settlement == null) {
-            src.sendError(tTxt("You are not in a settlement!"))
-
-            return 0
-        }
         for (it in gameProfiles) {
             val kickedPlayer = src.server.playerManager.getPlayer(it.id) ?: continue
             SettlementManager.removeCitizen(kickedPlayer, settlement)
@@ -285,40 +263,80 @@ object SettlementCommand {
 
     private fun leave(c: CommandContext<ServerCommandSource>, settlement: Settlement?): Int {
         val src = c.source
-        val player = src.player ?: return 0
+        val player = src.player ?: return src.playerOnly()
 
         val setl = settlement ?: player.getSettlements()?.first()
+        if (setl == null) return src.notInSettlement()
 
-        if (setl == null) {
-            src.sendError(tTxt("You are not in a settlement!"))
-
-            return 0
-        }
         val role = player.getRole(setl)
-        if (role == null) {
-            src.sendError(tTxt("You are not in a part of %s settlement!", setl.nameId))
+            ?: return src.endMsg("You are not in a part of %s settlement!", setl.nameId)
 
-            return 0
-        }
-        if (role == PlayerDataManager.Role.LEADER) {
-            src.sendError(tTxt("You are the leader of the settlement! You cant leave! Run /settlement delete if you want to delete your settlement."))
-
-            return 0
-        }
+        if (role == PlayerDataManager.Role.LEADER)
+            return src.endMsg("You are the leader of the settlement! You cant leave! Run /settlement delete if you want to delete your settlement.")
 
         SettlementManager.removeCitizen(player, setl)
-        src.sendError(tTxt("You have left the %s settlement!", setl.name))
+        src.sendSystemMessage(tTxt("You have left the %s settlement!", setl.name))
 
         return 1
     }
 
+
+    private fun join(c: CommandContext<ServerCommandSource>, settlement: Settlement): Int {
+        val src = c.source
+        val player = src.player ?: return src.playerOnly()
+
+        return when (settlement.joinPolicy) {
+            Settlement.JoinPolicy.INVITE -> {
+                val setl = SettlementManager.getInvite(player.uuid, settlement)
+                    ?: return src.endMsg("You need to be invited to join this settlement!")
+
+                SettlementManager.addCitizen(player, setl)
+                SettlementManager.clearInvites(player.uuid)
+                src.endMsg(tTxt("You have joined %s settlement!", setl.name))
+            }
+
+            Settlement.JoinPolicy.OPEN -> {
+                SettlementManager.addCitizen(player, settlement)
+                SettlementManager.clearInvites(player.uuid)
+                src.endMsg(tTxt("You have joined %s settlement!", settlement.name))
+            }
+
+            Settlement.JoinPolicy.CLOSED -> src.endError("This settlement doesnt allow ppl to join right now!")
+        }
+    }
 
     private fun menu(c: CommandContext<ServerCommandSource>): Int {
         val src = c.source
         val world = src.world
-        val player = src.player ?: return 0
+        val player = src.player ?: return src.playerOnly()
         src.sendSystemMessage(tTxt("gui"))
 
         return 1
     }
+
+    private fun ServerCommandSource.endMsg(text: String, vararg args: Any): Int {
+        this.sendSystemMessage(tTxt(text, *args))
+        return 0
+    }
+
+    private fun ServerCommandSource.endMsg(text: Text): Int {
+        this.sendSystemMessage(text)
+        return 0
+    }
+
+    private fun ServerCommandSource.endError(text: String, vararg args: Any): Int {
+        this.sendError(tTxt(text, *args))
+        return 0
+    }
+
+    private fun ServerCommandSource.endError(text: Text): Int {
+        this.sendError(text)
+        return 0
+    }
+
+    private fun ServerCommandSource.notInSettlement(): Int = this.endError("You are not in a settlement!")
+
+
+    private fun ServerCommandSource.playerOnly(): Int = this.endError("This command can only be run by a player!")
+
 }

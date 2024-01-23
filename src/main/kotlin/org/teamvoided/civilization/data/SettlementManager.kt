@@ -10,6 +10,7 @@ import net.minecraft.util.math.ChunkPos
 import net.minecraft.world.World
 import org.teamvoided.civilization.Civilization.log
 import org.teamvoided.civilization.compat.WebMaps
+import org.teamvoided.civilization.config.CivilizationConfig
 import org.teamvoided.civilization.util.BasicDirection
 import org.teamvoided.civilization.util.ResultType
 import org.teamvoided.civilization.util.Util
@@ -43,7 +44,6 @@ object SettlementManager {
     fun addSettlement(
         name: String, player: ServerPlayerEntity, chunkPos: ChunkPos, capitalPos: BlockPos, dimension: Identifier
     ): Pair<ResultType, Text> {
-        val leader = player.uuid
         val data = PlayerDataManager.getDataD(player)
         if (data != null && data.settlements.isNotEmpty()) return Pair(
             ResultType.FAIL, tTxt("You are in a settlement you cant crete a new one!")
@@ -55,7 +55,7 @@ object SettlementManager {
             ResultType.FAIL, tTxt("This chunk has been settled already!")
         )
         val id = UUID.randomUUID()
-        val newSet = Settlement(id, name, leader, player.name.string, chunkPos, capitalPos, dimension)
+        val newSet = Settlement(id, name, player, chunkPos, capitalPos, dimension)
         settlements.add(newSet)
 
         PlayerDataManager.setDataD(
@@ -122,6 +122,11 @@ object SettlementManager {
         return invites.mapNotNull { getById(it) }
     }
 
+    fun getInvite(player: UUID, settlement: Settlement): Settlement? {
+        val invites = invitesList[player] ?: return null
+        return invites.mapNotNull { getById(it) }.find { it.id == settlement.id }
+    }
+
     fun addInvites(player: UUID, settlement: Settlement) {
         if (invitesList[player] == null) invitesList[player] = mutableListOf(settlement.id)
         invitesList[player]?.add(settlement.id)
@@ -132,6 +137,7 @@ object SettlementManager {
 
         return 1
     }
+    fun clearInvites(player: UUID) = invitesList.remove(player)
 
     fun addCitizen(player: ServerPlayerEntity, settlement: Settlement) {
         settlement.addCitizen(player.uuid, player.name.string)
@@ -170,7 +176,7 @@ object SettlementManager {
     }
 
     private fun canCreateSettlementInDim(dim: Identifier?): Boolean {
-        return dim != null
+        return CivilizationConfig.getConfig().banedDimensions.contains(dim)
     }
 
     fun save(server: MinecraftServer, world: World): Int {

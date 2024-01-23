@@ -1,6 +1,7 @@
 package org.teamvoided.civilization.data
 
 import kotlinx.serialization.Serializable
+import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
@@ -17,6 +18,7 @@ data class Settlement(
     val name: String,
     val nameId: String,
     private var type: SettlementType,
+    val joinPolicy: JoinPolicy,
     private val citizens: MutableMap<@Serializable(with = UUIDSerializer::class) UUID, String>, // UUID - Name
     private val chunks: MutableSet<@Serializable(with = ChunkPosSerializer::class) ChunkPos>,
     val hamlets: MutableSet<@Serializable(with = UUIDSerializer::class) UUID>?,
@@ -31,8 +33,7 @@ data class Settlement(
     constructor(
         id: UUID,
         name: String,
-        leader: UUID,
-        leaderName: String,
+        leader: ServerPlayerEntity,
         chunkPos: ChunkPos,
         centerPos: BlockPos,
         dimension: Identifier
@@ -41,14 +42,15 @@ data class Settlement(
         name,
         Util.formatId(name),
         Settlement.SettlementType.BASE,
-        mutableMapOf(Pair(leader, leaderName)),
+        JoinPolicy.INVITE,
+        mutableMapOf(Pair(leader.uuid, leader.name.string)),
         mutableSetOf(chunkPos),
         null,
         false,
         null,
         false,
         centerPos,
-        leader,
+        leader.uuid,
         dimension
     )
 
@@ -107,4 +109,6 @@ data class Settlement(
 
     @Serializable
     enum class SettlementType { BASE, TOWN, CITY }
+    @Serializable
+    enum class JoinPolicy { INVITE, OPEN, CLOSED }
 }
