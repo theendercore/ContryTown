@@ -10,6 +10,7 @@ import net.minecraft.text.Text
 import org.teamvoided.civilization.commands.argument.NationArgumentType
 import org.teamvoided.civilization.commands.argument.NationArgumentType.nationArg
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType
+import org.teamvoided.civilization.config.CivilizationConfig
 import org.teamvoided.civilization.data.Nation
 import org.teamvoided.civilization.data.NationManager
 import org.teamvoided.civilization.data.Settlement
@@ -63,7 +64,7 @@ object NationCommand {
         val reqNode = literal("req").redirect(requirementsNode).build()
         dispatcher.root.addChild(reqNode)
 
-        if (true) { //config.haveNatAlias
+        if (CivilizationConfig.config().haveNatAlias) {
             val natNode = literal("nat").redirect(nationNode).build()
             dispatcher.root.addChild(natNode)
         }

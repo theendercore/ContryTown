@@ -176,7 +176,7 @@ object SettlementManager {
     }
 
     private fun canCreateSettlementInDim(dim: Identifier?): Boolean {
-        return CivilizationConfig.getConfig().banedDimensions.contains(dim)
+        return CivilizationConfig.config().banedDimensions.contains(dim)
     }
 
     fun save(server: MinecraftServer, world: World): Int {

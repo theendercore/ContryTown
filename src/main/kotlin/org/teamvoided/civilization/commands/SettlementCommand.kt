@@ -14,6 +14,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType.settlementArg
+import org.teamvoided.civilization.config.CivilizationConfig
 import org.teamvoided.civilization.data.PlayerDataManager
 import org.teamvoided.civilization.data.PlayerDataManager.getRole
 import org.teamvoided.civilization.data.PlayerDataManager.getSettlements
@@ -103,7 +104,7 @@ object SettlementCommand {
         settlementNode.addChild(menuNode)
 
 
-        if (true) { //config.haveSetlAlias
+        if (CivilizationConfig.config().haveSetlAlias) {
             val setlNode = literal("setl").redirect(settlementNode).build()
             dispatcher.root.addChild(setlNode)
         }
