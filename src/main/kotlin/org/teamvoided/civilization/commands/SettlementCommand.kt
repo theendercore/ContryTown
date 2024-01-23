@@ -3,8 +3,12 @@ package org.teamvoided.civilization.commands
 import com.mojang.authlib.GameProfile
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.context.CommandContext
+import eu.pb4.sgui.api.elements.GuiElementBuilder
+import eu.pb4.sgui.api.gui.SimpleGui
 import net.minecraft.command.argument.GameProfileArgumentType
 import net.minecraft.command.argument.MessageArgumentType
+import net.minecraft.item.Items
+import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.server.command.CommandManager.argument
 import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.server.command.ServerCommandSource
@@ -308,10 +312,36 @@ object SettlementCommand {
 
     private fun menu(c: CommandContext<ServerCommandSource>): Int {
         val src = c.source
-        val world = src.world
         val player = src.player ?: return src.playerOnly()
-        src.sendSystemMessage(tTxt("gui"))
+        val slotRemover = GuiElementBuilder(Items.GRAY_STAINED_GLASS_PANE).setName(lTxt("")).setCustomModelData(1)
 
+        val setl = player.getSettlements()?.first() ?: return src.notInSettlement()
+
+        val gui = SimpleGui(ScreenHandlerType.GENERIC_9X3, player, false)
+        for (x in 0..26) gui.setSlot(x, slotRemover)
+
+
+        gui.setSlot(10, GuiElementBuilder(Items.NAME_TAG).setName(lTxt(setl.name)))
+        gui.setSlot(
+            11,
+            GuiElementBuilder(Items.PLAYER_HEAD)
+                .setSkullOwner(GameProfile(setl.leader, setl.leaderName()), src.server)
+                .setName(lTxt(setl.leaderName()))
+        )
+        gui.setSlot(
+            12,
+            GuiElementBuilder(Items.CRAFTING_TABLE).setName(tTxt("Settlement Type: %s ", setl.getType().formatted()))
+        )
+        gui.setSlot(
+            13,
+            GuiElementBuilder(Items.PAPER).setName(tTxt("Settlement Join Policy : %s ", setl.joinPolicy.formatted()))
+        )
+        val playerItem = GuiElementBuilder(Items.ENCHANTED_BOOK).setName(lTxt("Active Players"))
+        for (ply in setl.getCitizens()) playerItem.addLoreLine(lTxt(ply.value))
+        gui.setSlot(16, playerItem)
+
+
+        gui.open()
         return 1
     }
 
@@ -336,7 +366,6 @@ object SettlementCommand {
     }
 
     private fun ServerCommandSource.notInSettlement(): Int = this.endError("You are not in a settlement!")
-
 
     private fun ServerCommandSource.playerOnly(): Int = this.endError("This command can only be run by a player!")
 

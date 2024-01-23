@@ -79,6 +79,8 @@ data class Settlement(
         citizens[leader] = x
     }
 
+    fun leaderName() = citizens[leader]!!
+
     fun getType(): SettlementType = type
     private fun updateType() {
         val newType = when (citizens.size) {
@@ -108,7 +110,16 @@ data class Settlement(
     }
 
     @Serializable
-    enum class SettlementType { BASE, TOWN, CITY }
+    enum class SettlementType {
+        BASE, TOWN, CITY;
+
+        fun formatted() = this.toString().lowercase().replaceFirstChar { it.titlecase() }
+    }
+
     @Serializable
-    enum class JoinPolicy { INVITE, OPEN, CLOSED }
+    enum class JoinPolicy {
+        INVITE, OPEN, CLOSED;
+
+        fun formatted() = this.toString().lowercase().replaceFirstChar { it.titlecase() }
+    }
 }
