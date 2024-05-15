@@ -40,5 +40,5 @@ object NationArgumentType {
     }
 
     private val UNKNOWN_NATION_EXCEPTION =
-        DynamicCommandExceptionType { Text.method_54159("Nation %s not found!", it) }
+        DynamicCommandExceptionType { Text.translatable("Nation %s not found!", it) }
 }

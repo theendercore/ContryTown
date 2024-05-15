@@ -1,0 +1,31 @@
+[versions]
+kotlin = "1.9.23"
+fabric-loom = "1.6.3"
+iridium = "3.2.0"
+
+farrow = "1.0.0+arrow.1.2.3"
+
+squaremap = "1.2.3"
+sgui = "1.5.1+1.20.5"
+player_data = "0.5.0+1.20.5"
+server_translations = "2.3.0+1.20.5-rc2"
+jts_core = "1.16.1"
+
+
+
+[libraries]
+farrow = { module = "net.wiredtomato:farrow", version.ref = "farrow" }
+
+squaremap-api = { module = "xyz.jpenilla:squaremap-api", version.ref = "squaremap" }
+sgui = { module = "eu.pb4:sgui", version.ref = "sgui" }
+player-data-api = { module = "eu.pb4:player-data-api", version.ref = "player_data" }
+server-translations-api = { module = "xyz.nucleoid:server-translations-api", version.ref = "server_translations" }
+jts-core = { module = "org.locationtech.jts:jts-core", version.ref = "jts_core" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+fabric-loom = { id = "fabric-loom", version.ref = "fabric-loom" }
+iridium = { id = "org.teamvoided.iridium", version.ref = "iridium" }
+iridium-publish = { id = "iridium.project.publish-script", version.ref = "iridium" }
+iridium-upload = { id = "iridium.mod.upload-script", version.ref = "iridium" }

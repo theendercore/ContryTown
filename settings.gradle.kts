@@ -1,12 +1,17 @@
+rootProject.name = "Civilization"
 pluginManagement {
     repositories {
-        maven("https://maven.fabricmc.net/") {
-            name = "Fabric"
-        }
+        maven("https://maven.fabricmc.net/") { name = "Fabric" }
+        maven("https://maven.teamvoided.org/releases")
         mavenCentral()
         gradlePluginPortal()
-        maven("https://maven.teamvoided.org/releases")
+        mavenLocal()
     }
 }
-
-rootProject.name = "Civilization"
+dependencyResolutionManagement {
+    versionCatalogs {
+        create("libs") {
+            from(files("libs.versions.toml"))
+        }
+    }
+}

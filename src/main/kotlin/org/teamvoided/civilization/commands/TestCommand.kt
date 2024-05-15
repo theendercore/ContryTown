@@ -84,7 +84,7 @@ object TestCommand {
                 2,
                 AnimatedGuiElementBuilder().setItem(Items.NETHERITE_AXE).setDamage(150).saveItemStack()
                     .setItem(Items.DIAMOND_AXE).setDamage(150).unbreakable().saveItemStack().setItem(Items.GOLDEN_AXE)
-                    .glow().saveItemStack().setItem(Items.IRON_AXE).enchant(Enchantments.AQUA_AFFINITY, 1).hideFlags()
+                    .glow().saveItemStack().setItem(Items.IRON_AXE).enchant(Enchantments.AQUA_AFFINITY, 1)
                     .saveItemStack().setItem(Items.STONE_AXE).saveItemStack().setItem(Items.WOODEN_AXE).saveItemStack()
                     .setInterval(10).setRandom(true)
             )
@@ -122,7 +122,7 @@ object TestCommand {
             ).addLoreLine(lTxt("Some lore")).addLoreLine(lTxt("More lore").formatted(Formatting.RED))
                 .setCount(1).setCallback { index: Int, clickType: ClickType, _: SlotActionType ->
                     player.sendMessage(lTxt("derg "), false)
-                    val item = gui.getSlot(index).itemStack
+                    val item = gui.getSlot(index)!!.itemStack
                     if (clickType == ClickType.MOUSE_LEFT) {
                         item.count = if (item.count == 1) item.count else item.count - 1
                     } else if (clickType == ClickType.MOUSE_RIGHT) {
