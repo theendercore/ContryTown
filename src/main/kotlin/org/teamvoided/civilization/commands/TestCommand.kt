@@ -20,11 +20,11 @@ import net.minecraft.util.Formatting
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType.settlementArg
 import org.teamvoided.civilization.data.ResultType
-import org.teamvoided.civilization.managers.PlayerDataManager
 import org.teamvoided.civilization.data.Settlement
-import org.teamvoided.civilization.data.wrappedText
 import org.teamvoided.civilization.init.CivCommands.DEBUG_MODE
+import org.teamvoided.civilization.managers.PlayerDataManager
 import org.teamvoided.civilization.util.Util.lTxt
+import org.teamvoided.civilization.util.buildText
 import java.util.*
 
 
@@ -157,7 +157,6 @@ object TestCommand {
         return 0
     }
 
-
     private fun mapLink(c: CommandContext<ServerCommandSource>): Int {
         c.source.sendSystemMessage(lTxt("http://localhost:8080/"))
         return 1
@@ -184,32 +183,10 @@ object TestCommand {
         gui.setSlot(
             1,
             GuiElementBuilder(Items.STICK)
-                .setName(toText())
+                .setLore(settlement.toText().siblings)
         )
         gui.open()
         return 1
     }
 
-}
-
-fun toText(): MutableText {
-    val bl = false
-    val num = 1.0
-    val str = "hello"
-    val nil = null
-    val obj = ResultType.SUCCESS
-    val lst = listOf("1", "t")
-
-    // bool, number, text, null, object, list
-    return wrappedText {
-        addBool(bl)
-        addNumber(num)
-        addString(str)
-        addObject("result") {
-            addString(obj.toString())
-        }
-        addList {
-            lst.forEach { addString(it) }
-        }
-    }
 }

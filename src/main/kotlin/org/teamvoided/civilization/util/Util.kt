@@ -23,6 +23,8 @@ object Util {
     fun formatId(string: String): String =
         string.lowercase().replace(idRegex, "_").replace(Regex("_{2,}"), "_")
 
+    fun String.toWord(): String = this.lowercase().replaceFirstChar { it.titlecase() }
+
     fun getWorldPath(server: MinecraftServer, world: World): Path =
         DimensionType.getSaveDirectory(world.registryKey, server.getSavePath(WorldSavePath.ROOT)).parent
             .resolve("data")

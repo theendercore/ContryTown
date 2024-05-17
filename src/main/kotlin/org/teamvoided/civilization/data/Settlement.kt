@@ -11,6 +11,9 @@ import org.teamvoided.civilization.serialization.serializers.ChunkPosSerializer
 import org.teamvoided.civilization.serialization.serializers.IdentifierSerializer
 import org.teamvoided.civilization.serialization.serializers.UUIDSerializer
 import org.teamvoided.civilization.util.Util
+import org.teamvoided.civilization.util.Util.toWord
+import org.teamvoided.civilization.util.buildText
+import org.teamvoided.civilization.util.iface.Textable
 import java.util.*
 
 @Serializable
@@ -29,7 +32,7 @@ data class Settlement(
     @Serializable(with = BlockPosSerializer::class) val center: BlockPos,
     @Serializable(with = UUIDSerializer::class) val leader: UUID,
     @Serializable(with = IdentifierSerializer::class) val dimension: Identifier
-) {
+) : Textable {
 
     constructor(
         id: UUID,
@@ -94,6 +97,7 @@ data class Settlement(
     }
 
     fun formatId(): String = this.id.toString().lowercase()
+
     override fun toString(): String {
         return "id - ${this.id}\n" +
                 "name - ${this.name}\n" +
@@ -110,21 +114,48 @@ data class Settlement(
                 "dimension - ${this.dimension}"
     }
 
-    fun toText(): MutableText {
-        TODO("Not yet implemented")
+    override fun toText(): MutableText = buildText {
+        addString("id", formatId())
+        addString("name", name)
+        addString("formatted_name", nameId)
+        addString("type", type.toString())
+        addList("citizens") {
+            citizens.forEach { addStringRaw(it.value) }
+        }
+        addList("chunks") {
+            chunks.forEach {
+                addListRaw {
+                    addNumberRaw(it.x)
+                    addNumberRaw(it.z)
+                }
+            }
+        }
+        addList("hamlets") {
+            hamlets?.forEach { addString("hamlet", it.toString()) }
+        }
+        addBool("isHamlet", isHamlet)
+        addString("nation", nation?.toString())
+        addBool("isCapital", isCapital)
+        addObject("center") {
+            addNumber("x", center.x)
+            addNumber("y", center.y)
+            addNumber("z", center.z)
+        }
+        addString("leader", leader.toString())
+        addString("dimension", dimension.toString())
     }
 
     @Serializable
     enum class SettlementType {
         BASE, TOWN, CITY;
 
-        fun formatted() = this.toString().lowercase().replaceFirstChar { it.titlecase() }
+        fun formatted() = this.toString().toWord()
     }
 
     @Serializable
     enum class JoinPolicy {
         INVITE, OPEN, CLOSED;
 
-        fun formatted() = this.toString().lowercase().replaceFirstChar { it.titlecase() }
+        fun formatted() = this.toString().toWord()
     }
 }
