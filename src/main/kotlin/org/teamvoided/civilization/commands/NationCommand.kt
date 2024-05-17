@@ -1,3 +1,5 @@
+@file:Suppress("UNUSED_VARIABLE", "UnusedParameter") // TODO: Remove this from file
+
 package org.teamvoided.civilization.commands
 
 import com.mojang.brigadier.CommandDispatcher
@@ -12,11 +14,12 @@ import org.teamvoided.civilization.commands.argument.NationArgumentType.nationAr
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType
 import org.teamvoided.civilization.config.CivilizationConfig
 import org.teamvoided.civilization.data.Nation
-import org.teamvoided.civilization.managers.NationManager
 import org.teamvoided.civilization.data.Settlement
+import org.teamvoided.civilization.managers.NationManager
 import org.teamvoided.civilization.util.Util.emptyResult
 import org.teamvoided.civilization.util.Util.lTxt
 import org.teamvoided.civilization.util.Util.tTxt
+
 object NationCommand {
     fun init(dispatcher: CommandDispatcher<ServerCommandSource>) {
         val nationNode = literal("nation").build()
@@ -82,6 +85,7 @@ object NationCommand {
         src.sendSystemMessage(results.second)
         return 1
     }
+
     private fun deleteNation(c: CommandContext<ServerCommandSource>, nation: Nation): Int {
         val src = c.source
         val player = src.player ?: return 0
@@ -95,6 +99,7 @@ object NationCommand {
         src.sendSystemMessage(results.second)
         return 1
     }
+
     private fun list(c: CommandContext<ServerCommandSource>): Int {
         val nations = NationManager.getAllNations()
         if (nations.isEmpty()) {
@@ -136,7 +141,7 @@ object NationCommand {
         val world = src.world
         val player = src.player ?: return 0
 
-        val results =  emptyResult()
+        val results = emptyResult()
 //            SettlementManager.removeSettlement(settlement, ...args)
 
         if (results.first.didFail()) {
@@ -154,6 +159,7 @@ object NationCommand {
         src.sendSystemMessage(tTxt("gui"))
         return 1
     }
+
     private fun requirements(c: CommandContext<ServerCommandSource>): Int {
         val src = c.source
         src.sendSystemMessage(tTxt("Requirements:"))

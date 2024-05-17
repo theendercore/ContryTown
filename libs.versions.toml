@@ -4,6 +4,7 @@ fabric-loom = "1.6.3"
 iridium = "3.2.0"
 
 farrow = "1.0.0+arrow.1.2.3"
+detekt = "1.23.6"
 
 squaremap = "1.2.3"
 sgui = "1.5.1+1.20.5"
@@ -29,3 +30,4 @@ fabric-loom = { id = "fabric-loom", version.ref = "fabric-loom" }
 iridium = { id = "org.teamvoided.iridium", version.ref = "iridium" }
 iridium-publish = { id = "iridium.project.publish-script", version.ref = "iridium" }
 iridium-upload = { id = "iridium.mod.upload-script", version.ref = "iridium" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }

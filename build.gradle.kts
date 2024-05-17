@@ -9,7 +9,14 @@ plugins {
     alias(libs.plugins.iridium)
     alias(libs.plugins.iridium.publish)
     alias(libs.plugins.iridium.upload)
+    alias(libs.plugins.detekt)
 }
+
+detekt {
+    allRules = true
+    config.setFrom(file("gradle/detekt.yml"))
+}
+
 
 group = property("maven_group")!!
 version = property("mod_version")!!
