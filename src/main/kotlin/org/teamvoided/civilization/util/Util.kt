@@ -10,6 +10,7 @@ import net.minecraft.util.WorldSavePath
 import net.minecraft.world.World
 import net.minecraft.world.dimension.DimensionType
 import org.teamvoided.civilization.Civilization
+import org.teamvoided.civilization.data.ResultType
 import java.nio.file.Path
 
 

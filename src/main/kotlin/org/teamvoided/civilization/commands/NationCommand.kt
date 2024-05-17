@@ -12,7 +12,7 @@ import org.teamvoided.civilization.commands.argument.NationArgumentType.nationAr
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType
 import org.teamvoided.civilization.config.CivilizationConfig
 import org.teamvoided.civilization.data.Nation
-import org.teamvoided.civilization.data.NationManager
+import org.teamvoided.civilization.managers.NationManager
 import org.teamvoided.civilization.data.Settlement
 import org.teamvoided.civilization.util.Util.emptyResult
 import org.teamvoided.civilization.util.Util.lTxt

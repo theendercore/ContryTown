@@ -2,7 +2,7 @@ package org.teamvoided.civilization.compat
 
 import org.teamvoided.civilization.data.Nation
 import org.teamvoided.civilization.data.Settlement
-import org.teamvoided.civilization.data.SettlementManager
+import org.teamvoided.civilization.managers.SettlementManager
 
 object WebMaps {
 

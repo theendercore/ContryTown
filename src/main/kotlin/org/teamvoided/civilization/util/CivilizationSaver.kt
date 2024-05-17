@@ -2,8 +2,8 @@ package org.teamvoided.civilization.util
 
 import net.minecraft.server.MinecraftServer
 import org.teamvoided.civilization.Civilization.log
-import org.teamvoided.civilization.data.NationManager
-import org.teamvoided.civilization.data.SettlementManager
+import org.teamvoided.civilization.managers.NationManager
+import org.teamvoided.civilization.managers.SettlementManager
 
 object CivilizationSaver {
     fun save(server: MinecraftServer){

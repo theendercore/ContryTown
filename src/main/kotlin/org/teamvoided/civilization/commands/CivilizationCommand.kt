@@ -4,8 +4,8 @@ import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.context.CommandContext
 import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.server.command.ServerCommandSource
-import org.teamvoided.civilization.data.NationManager
-import org.teamvoided.civilization.data.SettlementManager
+import org.teamvoided.civilization.managers.NationManager
+import org.teamvoided.civilization.managers.SettlementManager
 import org.teamvoided.civilization.util.Util.tTxt
 
 object CivilizationCommand {

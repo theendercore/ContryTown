@@ -19,12 +19,12 @@ import net.minecraft.util.Formatting
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType.settlementArg
 import org.teamvoided.civilization.config.CivilizationConfig
-import org.teamvoided.civilization.data.PlayerDataManager
-import org.teamvoided.civilization.data.PlayerDataManager.getRole
-import org.teamvoided.civilization.data.PlayerDataManager.getSettlements
+import org.teamvoided.civilization.managers.PlayerDataManager
+import org.teamvoided.civilization.managers.PlayerDataManager.getRole
+import org.teamvoided.civilization.managers.PlayerDataManager.getSettlements
 import org.teamvoided.civilization.data.Settlement
-import org.teamvoided.civilization.data.SettlementManager
-import org.teamvoided.civilization.util.ResultType
+import org.teamvoided.civilization.managers.SettlementManager
+import org.teamvoided.civilization.data.ResultType
 import org.teamvoided.civilization.util.Util.lTxt
 import org.teamvoided.civilization.util.Util.tTxt
 

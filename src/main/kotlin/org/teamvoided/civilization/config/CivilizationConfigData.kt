@@ -3,7 +3,7 @@ package org.teamvoided.civilization.config
 import kotlinx.serialization.Required
 import kotlinx.serialization.Serializable
 import net.minecraft.util.Identifier
-import org.teamvoided.civilization.serializers.IdentifierSerializer
+import org.teamvoided.civilization.serialization.serializers.IdentifierSerializer
 
 @Serializable
 

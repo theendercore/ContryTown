@@ -8,9 +8,9 @@ import net.minecraft.util.Identifier
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.teamvoided.civilization.compat.SquaremapIntegrations
-import org.teamvoided.civilization.data.NationManager
-import org.teamvoided.civilization.data.PlayerDataManager
-import org.teamvoided.civilization.data.SettlementManager
+import org.teamvoided.civilization.managers.NationManager
+import org.teamvoided.civilization.managers.PlayerDataManager
+import org.teamvoided.civilization.managers.SettlementManager
 import org.teamvoided.civilization.init.CivCommands
 import org.teamvoided.civilization.util.Util
 

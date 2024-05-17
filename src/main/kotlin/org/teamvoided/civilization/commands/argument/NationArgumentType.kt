@@ -12,7 +12,7 @@ import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
 import org.teamvoided.civilization.data.Nation
-import org.teamvoided.civilization.data.NationManager
+import org.teamvoided.civilization.managers.NationManager
 import java.util.concurrent.CompletableFuture
 
 object NationArgumentType {

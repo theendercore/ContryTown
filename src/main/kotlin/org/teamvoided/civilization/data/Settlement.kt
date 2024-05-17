@@ -2,13 +2,14 @@ package org.teamvoided.civilization.data
 
 import kotlinx.serialization.Serializable
 import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.text.MutableText
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
-import org.teamvoided.civilization.serializers.BlockPosSerializer
-import org.teamvoided.civilization.serializers.ChunkPosSerializer
-import org.teamvoided.civilization.serializers.IdentifierSerializer
-import org.teamvoided.civilization.serializers.UUIDSerializer
+import org.teamvoided.civilization.serialization.serializers.BlockPosSerializer
+import org.teamvoided.civilization.serialization.serializers.ChunkPosSerializer
+import org.teamvoided.civilization.serialization.serializers.IdentifierSerializer
+import org.teamvoided.civilization.serialization.serializers.UUIDSerializer
 import org.teamvoided.civilization.util.Util
 import java.util.*
 
@@ -107,6 +108,10 @@ data class Settlement(
                 "center - ${this.center}\n" +
                 "leader - ${this.leader}\n" +
                 "dimension - ${this.dimension}"
+    }
+
+    fun toText(): MutableText {
+        TODO("Not yet implemented")
     }
 
     @Serializable

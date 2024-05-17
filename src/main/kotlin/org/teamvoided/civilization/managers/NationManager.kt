@@ -1,4 +1,4 @@
-package org.teamvoided.civilization.data
+package org.teamvoided.civilization.managers
 
 import kotlinx.serialization.builtins.ListSerializer
 import net.minecraft.server.MinecraftServer
@@ -6,7 +6,8 @@ import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 import org.teamvoided.civilization.Civilization.log
 import org.teamvoided.civilization.compat.WebMaps
-import org.teamvoided.civilization.util.ResultType
+import org.teamvoided.civilization.data.Nation
+import org.teamvoided.civilization.data.ResultType
 import org.teamvoided.civilization.util.Util
 import org.teamvoided.civilization.util.Util.tTxt
 import java.io.File

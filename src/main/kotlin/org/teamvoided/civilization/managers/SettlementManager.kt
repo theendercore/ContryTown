@@ -1,4 +1,4 @@
-package org.teamvoided.civilization.data
+package org.teamvoided.civilization.managers
 
 import kotlinx.serialization.builtins.ListSerializer
 import net.minecraft.server.MinecraftServer
@@ -11,8 +11,9 @@ import net.minecraft.world.World
 import org.teamvoided.civilization.Civilization.log
 import org.teamvoided.civilization.compat.WebMaps
 import org.teamvoided.civilization.config.CivilizationConfig
-import org.teamvoided.civilization.util.BasicDirection
-import org.teamvoided.civilization.util.ResultType
+import org.teamvoided.civilization.data.Settlement
+import org.teamvoided.civilization.data.BasicDirection
+import org.teamvoided.civilization.data.ResultType
 import org.teamvoided.civilization.util.Util
 import org.teamvoided.civilization.util.Util.getWorldPath
 import org.teamvoided.civilization.util.Util.tTxt

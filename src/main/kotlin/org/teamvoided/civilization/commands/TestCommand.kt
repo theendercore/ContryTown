@@ -14,9 +14,15 @@ import net.minecraft.screen.slot.Slot
 import net.minecraft.screen.slot.SlotActionType
 import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.server.command.ServerCommandSource
+import net.minecraft.text.MutableText
 import net.minecraft.text.Style
 import net.minecraft.util.Formatting
-import org.teamvoided.civilization.data.PlayerDataManager
+import org.teamvoided.civilization.commands.argument.SettlementArgumentType
+import org.teamvoided.civilization.commands.argument.SettlementArgumentType.settlementArg
+import org.teamvoided.civilization.data.ResultType
+import org.teamvoided.civilization.managers.PlayerDataManager
+import org.teamvoided.civilization.data.Settlement
+import org.teamvoided.civilization.data.wrappedText
 import org.teamvoided.civilization.init.CivCommands.DEBUG_MODE
 import org.teamvoided.civilization.util.Util.lTxt
 import java.util.*
@@ -34,6 +40,15 @@ object TestCommand {
 
         val clearDataNode = literal("clear_data").executes(this::clearData).build()
         testNode.addChild(clearDataNode)
+
+
+        val debugNode = literal("text").build()
+        testNode.addChild(debugNode)
+        debugNode.addChild(
+            settlementArg()
+                .executes { text(it, SettlementArgumentType.getSettlement(it)) }
+                .build()
+        )
 
         val debugMode = literal("debug_mode").executes {
             DEBUG_MODE = !DEBUG_MODE
@@ -154,5 +169,47 @@ object TestCommand {
         PlayerDataManager.clearD(player)
         src.sendSystemMessage(lTxt("data reset"))
         return 1
+    }
+
+
+    private fun text(c: CommandContext<ServerCommandSource>, settlement: Settlement): Int {
+        val src = c.source
+        val player = src.player ?: return 0
+        val slotRemover = GuiElementBuilder(Items.GRAY_STAINED_GLASS_PANE).hideTooltip()
+
+
+        val gui = SimpleGui(ScreenHandlerType.GENERIC_3X3, player, false)
+        for (x in 0..8) gui.setSlot(x, slotRemover)
+
+        gui.setSlot(
+            1,
+            GuiElementBuilder(Items.STICK)
+                .setName(toText())
+        )
+        gui.open()
+        return 1
+    }
+
+}
+
+fun toText(): MutableText {
+    val bl = false
+    val num = 1.0
+    val str = "hello"
+    val nil = null
+    val obj = ResultType.SUCCESS
+    val lst = listOf("1", "t")
+
+    // bool, number, text, null, object, list
+    return wrappedText {
+        addBool(bl)
+        addNumber(num)
+        addString(str)
+        addObject("result") {
+            addString(obj.toString())
+        }
+        addList {
+            lst.forEach { addString(it) }
+        }
     }
 }

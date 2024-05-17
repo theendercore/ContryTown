@@ -1,9 +1,10 @@
-package org.teamvoided.civilization.data
+package org.teamvoided.civilization.managers
 
 import eu.pb4.playerdata.api.PlayerDataApi
 import eu.pb4.playerdata.api.storage.JsonDataStorage
 import eu.pb4.playerdata.api.storage.PlayerDataStorage
 import net.minecraft.server.network.ServerPlayerEntity
+import org.teamvoided.civilization.data.Settlement
 import java.util.*
 
 object PlayerDataManager {

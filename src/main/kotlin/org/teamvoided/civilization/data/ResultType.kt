@@ -1,4 +1,4 @@
-package org.teamvoided.civilization.util
+package org.teamvoided.civilization.data
 
 enum class ResultType {
     SUCCESS, FAIL, LOGIC;
