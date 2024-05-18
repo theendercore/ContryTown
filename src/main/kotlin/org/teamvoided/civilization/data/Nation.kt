@@ -47,12 +47,12 @@ data class Nation(
     }
 
     override fun toText(): MutableText = buildText {
-        addString("id", id.toString())
-        addString("name", name)
-        addString("formatted_name", nameId)
-        addList("settlements") { settlements.forEach { addString("settlement", it.toString()) } }
-        addString("leader", leader.toString())
-        addString("council_delegate", councilDelegate.toString())
-        addString("capital", capital.toString())
+        add("id", id.toString())
+        add("name", name)
+        add("formatted_name", nameId)
+        addList("settlements") { settlements.forEach { add("settlement", it.toString()) } }
+        add("leader", leader.toString())
+        add("council_delegate", councilDelegate.toString())
+        add("capital", capital.toString())
     }
 }

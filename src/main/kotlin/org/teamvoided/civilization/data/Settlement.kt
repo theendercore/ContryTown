@@ -115,34 +115,34 @@ data class Settlement(
     }
 
     override fun toText(): MutableText = buildText {
-        addString("id", formatId())
-        addString("name", name)
-        addString("formatted_name", nameId)
-        addString("type", type.toString())
+        add("id", formatId())
+        add("name", name)
+        add("formatted_name", nameId)
+        add("type", type.toString())
         addList("citizens") {
-            citizens.forEach { addStringRaw(it.value) }
+            citizens.forEach { add(it.value) }
         }
         addList("chunks") {
             chunks.forEach {
                 addListRaw {
-                    addNumberRaw(it.x)
-                    addNumberRaw(it.z)
+                    add(it.x)
+                    add(it.z)
                 }
             }
         }
         addList("hamlets") {
-            hamlets?.forEach { addString("hamlet", it.toString()) }
+            hamlets?.forEach { add("hamlet", it.toString()) }
         }
-        addBool("isHamlet", isHamlet)
-        addString("nation", nation?.toString())
-        addBool("isCapital", isCapital)
+        add("isHamlet", isHamlet)
+        add("nation", nation?.toString())
+        add("isCapital", isCapital)
         addObject("center") {
-            addNumber("x", center.x)
-            addNumber("y", center.y)
-            addNumber("z", center.z)
+            add("x", center.x)
+            add("y", center.y)
+            add("z", center.z)
         }
-        addString("leader", leader.toString())
-        addString("dimension", dimension.toString())
+        add("leader", leader.toString())
+        add("dimension", dimension.toString())
     }
 
     @Serializable

@@ -1,3 +1,5 @@
+@file:Suppress("UnusedParameter", "ReturnCount") // TODO: Remove this from file
+
 package org.teamvoided.civilization.commands
 
 import com.mojang.authlib.GameProfile
@@ -25,8 +27,8 @@ import org.teamvoided.civilization.managers.PlayerDataManager
 import org.teamvoided.civilization.managers.PlayerDataManager.getRole
 import org.teamvoided.civilization.managers.PlayerDataManager.getSettlements
 import org.teamvoided.civilization.managers.SettlementManager
-import org.teamvoided.civilization.util.Util.lTxt
-import org.teamvoided.civilization.util.Util.tTxt
+import org.teamvoided.civilization.util.lTxt
+import org.teamvoided.civilization.util.tTxt
 
 object SettlementCommand {
     fun init(dispatcher: CommandDispatcher<ServerCommandSource>) {

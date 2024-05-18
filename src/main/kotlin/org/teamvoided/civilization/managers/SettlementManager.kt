@@ -16,7 +16,7 @@ import org.teamvoided.civilization.data.BasicDirection
 import org.teamvoided.civilization.data.ResultType
 import org.teamvoided.civilization.util.Util
 import org.teamvoided.civilization.util.Util.getWorldPath
-import org.teamvoided.civilization.util.Util.tTxt
+import org.teamvoided.civilization.util.tTxt
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter

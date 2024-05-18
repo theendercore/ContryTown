@@ -6,7 +6,7 @@ import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.server.command.ServerCommandSource
 import org.teamvoided.civilization.managers.NationManager
 import org.teamvoided.civilization.managers.SettlementManager
-import org.teamvoided.civilization.util.Util.tTxt
+import org.teamvoided.civilization.util.tTxt
 
 object CivilizationCommand {
 

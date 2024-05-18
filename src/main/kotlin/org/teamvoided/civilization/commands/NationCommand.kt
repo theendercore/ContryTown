@@ -1,4 +1,4 @@
-@file:Suppress("UNUSED_VARIABLE", "UnusedParameter") // TODO: Remove this from file
+@file:Suppress("UNUSED_VARIABLE", "UnusedParameter", "ReturnCount", "UNUSED_PARAMETER") // TODO: Remove this from file
 
 package org.teamvoided.civilization.commands
 
@@ -17,8 +17,8 @@ import org.teamvoided.civilization.data.Nation
 import org.teamvoided.civilization.data.Settlement
 import org.teamvoided.civilization.managers.NationManager
 import org.teamvoided.civilization.util.Util.emptyResult
-import org.teamvoided.civilization.util.Util.lTxt
-import org.teamvoided.civilization.util.Util.tTxt
+import org.teamvoided.civilization.util.lTxt
+import org.teamvoided.civilization.util.tTxt
 
 object NationCommand {
     fun init(dispatcher: CommandDispatcher<ServerCommandSource>) {

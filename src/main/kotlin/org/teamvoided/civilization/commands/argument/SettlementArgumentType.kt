@@ -12,7 +12,7 @@ import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
 import org.teamvoided.civilization.data.Settlement
 import org.teamvoided.civilization.managers.SettlementManager
-import org.teamvoided.civilization.util.Util.tTxt
+import org.teamvoided.civilization.util.tTxt
 import java.util.concurrent.CompletableFuture
 
 object SettlementArgumentType {

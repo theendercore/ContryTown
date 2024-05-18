@@ -14,20 +14,17 @@ import net.minecraft.screen.slot.Slot
 import net.minecraft.screen.slot.SlotActionType
 import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.server.command.ServerCommandSource
-import net.minecraft.text.MutableText
 import net.minecraft.text.Style
 import net.minecraft.util.Formatting
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType.settlementArg
-import org.teamvoided.civilization.data.ResultType
 import org.teamvoided.civilization.data.Settlement
 import org.teamvoided.civilization.init.CivCommands.DEBUG_MODE
 import org.teamvoided.civilization.managers.PlayerDataManager
-import org.teamvoided.civilization.util.Util.lTxt
-import org.teamvoided.civilization.util.buildText
+import org.teamvoided.civilization.util.lTxt
 import java.util.*
 
-
+@Suppress("MagicNumber")
 object TestCommand {
     fun init(dispatcher: CommandDispatcher<ServerCommandSource>) {
         val testNode = literal("qtest").build()

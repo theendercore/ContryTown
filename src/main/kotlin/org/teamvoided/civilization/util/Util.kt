@@ -5,7 +5,6 @@ import kotlinx.serialization.json.Json
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.server.MinecraftServer
 import net.minecraft.text.MutableText
-import net.minecraft.text.Text
 import net.minecraft.util.WorldSavePath
 import net.minecraft.world.World
 import net.minecraft.world.dimension.DimensionType
@@ -33,8 +32,5 @@ object Util {
     fun getGlobalPath(): Path =
         FabricLoader.getInstance().gameDir.resolve("data").resolve(Civilization.MODID)
 
-    fun tTxt(text: String, vararg args: Any): MutableText = Text.translatable(text, *args)
-    fun lTxt(text: String): MutableText = Text.literal(text)
-    fun emptyResult(): Pair<ResultType, MutableText> = Pair(ResultType.SUCCESS, this.tTxt("Result!"))
-
+    fun emptyResult(): Pair<ResultType, MutableText> = Pair(ResultType.SUCCESS, tTxt("Result!"))
 }
