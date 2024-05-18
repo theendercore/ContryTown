@@ -11,9 +11,9 @@ import net.minecraft.world.World
 import org.teamvoided.civilization.Civilization.log
 import org.teamvoided.civilization.compat.WebMaps
 import org.teamvoided.civilization.config.CivilizationConfig
-import org.teamvoided.civilization.data.Settlement
 import org.teamvoided.civilization.data.BasicDirection
 import org.teamvoided.civilization.data.ResultType
+import org.teamvoided.civilization.data.Settlement
 import org.teamvoided.civilization.util.Util
 import org.teamvoided.civilization.util.Util.getWorldPath
 import org.teamvoided.civilization.util.tTxt
@@ -23,7 +23,7 @@ import java.io.FileWriter
 import java.util.*
 
 
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate", "TooManyFunctions")
 object SettlementManager {
     private val settlements: MutableList<Settlement> = mutableListOf()
     private val invitesList: MutableMap<UUID, MutableList<UUID>> = mutableMapOf()   //Player - <Settlements>
@@ -39,6 +39,8 @@ object SettlementManager {
     @Suppress("unused")
     fun getById(id: UUID): Settlement? = settlements.find { it.id == id }
     fun getByName(name: String): Settlement? = settlements.find { it.nameId == name }
+    fun getByChunkPos(pos: ChunkPos): Settlement? = settlements.find { it.getChunks().contains(pos) }
+
     fun getSettledChunks(): Map<ChunkPos, UUID> =
         settlements.flatMap { set -> set.getChunks().map { Pair(it, set.id) } }.toMap()
 
@@ -138,6 +140,7 @@ object SettlementManager {
 
         return 1
     }
+
     fun clearInvites(player: UUID) = invitesList.remove(player)
 
     fun addCitizen(player: ServerPlayerEntity, settlement: Settlement) {
