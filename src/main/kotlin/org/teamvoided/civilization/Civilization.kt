@@ -12,7 +12,7 @@ import net.minecraft.util.math.ChunkPos
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.teamvoided.civilization.compat.SquaremapIntegrations
-import org.teamvoided.civilization.events.LivingEntityMoveCallback
+import org.teamvoided.civilization.events.LivingEntityMoveEvent
 import org.teamvoided.civilization.init.CivCommands
 import org.teamvoided.civilization.managers.PlayerDataManager
 import org.teamvoided.civilization.managers.SettlementManager
@@ -34,7 +34,7 @@ object Civilization {
         CivCommands.init()
         PlayerDataManager.init()
         ServerLifecycleEvents.SERVER_STARTED.register(::afterServerLoads)
-        LivingEntityMoveCallback.EVENT.register(::playerChangeChunk)
+        LivingEntityMoveEvent.EVENT.register(::playerChangeChunk)
 
     }
 
