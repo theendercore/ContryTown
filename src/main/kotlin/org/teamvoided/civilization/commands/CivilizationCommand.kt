@@ -4,9 +4,13 @@ import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.context.CommandContext
 import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.server.command.ServerCommandSource
+import org.teamvoided.civilization.commands.argument.SettlementArgumentType
+import org.teamvoided.civilization.commands.argument.SettlementArgumentType.settlementArg
+import org.teamvoided.civilization.data.Settlement
 import org.teamvoided.civilization.managers.NationManager
 import org.teamvoided.civilization.managers.SettlementManager
 import org.teamvoided.civilization.util.tTxt
+import org.teamvoided.civilization.util.teleport
 
 object CivilizationCommand {
 
@@ -20,15 +24,24 @@ object CivilizationCommand {
         val saveNode = literal("save").executes(::save).build()
         civilizationNode.addChild(saveNode)
 
-        val infoNode = literal("info").executes(::info).build()
-        civilizationNode.addChild(infoNode)
 
-        val helpNode = literal("help").executes(::help).build()
-        civilizationNode.addChild(helpNode)
+        val tpNode = literal("tp").requires { it.hasPermission(2) }.build()
+        civilizationNode.addChild(tpNode)
+        val tpSetlNode = literal("settlement").build()
+        tpNode.addChild(tpSetlNode)
+        val tpSetlNameArg = settlementArg().executes { tp(it, SettlementArgumentType.getSettlement(it)) }.build()
+        tpSetlNode.addChild(tpSetlNameArg)
 
-        val menuNode = literal("menu").executes(::menu).build()
-        civilizationNode.addChild(menuNode)
+        /*
+                val infoNode = literal("info").executes(::info).build()
+                civilizationNode.addChild(infoNode)
 
+                val helpNode = literal("help").executes(::help).build()
+                civilizationNode.addChild(helpNode)
+
+                val menuNode = literal("menu").executes(::menu).build()
+                civilizationNode.addChild(menuNode)
+        */
 
         dispatcher.register(literal("civ").redirect(civilizationNode))
     }
@@ -65,24 +78,15 @@ object CivilizationCommand {
         return 1
     }
 
-    private fun info(c: CommandContext<ServerCommandSource>): Int {
-        c.source.sendSystemMessage(tTxt("Info"))
-
-        return 1
-    }
-
-    private fun help(c: CommandContext<ServerCommandSource>): Int {
-        c.source.sendSystemMessage(tTxt("*put help here*"))
-
-        return 1
-    }
-
-    private fun menu(c: CommandContext<ServerCommandSource>): Int {
+    private fun tp(c: CommandContext<ServerCommandSource>, settlement: Settlement): Int {
         val src = c.source
-        val world = src.world
         val player = src.player ?: return 0
-        src.sendSystemMessage(tTxt("command.civilization.menu"))
 
+        settlement.center
+
+        player.teleport(settlement.center)
+        src.sendSystemMessage(tTxt("Teleported to %s!", settlement.name))
         return 1
     }
+
 }
