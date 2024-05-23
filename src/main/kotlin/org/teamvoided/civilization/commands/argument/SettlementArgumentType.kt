@@ -12,7 +12,7 @@ import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
 import org.teamvoided.civilization.data.Settlement
 import org.teamvoided.civilization.managers.SettlementManager
-import org.teamvoided.civilization.util.tTxt
+import org.teamvoided.civilization.util.tText
 import java.util.concurrent.CompletableFuture
 
 object SettlementArgumentType {
@@ -40,5 +40,5 @@ object SettlementArgumentType {
     }
 
     private val UNKNOWN_SETTLEMENT_EXCEPTION =
-        DynamicCommandExceptionType { tTxt("Settlement %s not found!", it) }
+        DynamicCommandExceptionType { tText("Settlement %s not found!", it) }
 }

@@ -27,8 +27,8 @@ import org.teamvoided.civilization.managers.PlayerDataManager
 import org.teamvoided.civilization.managers.PlayerDataManager.getRole
 import org.teamvoided.civilization.managers.PlayerDataManager.getSettlements
 import org.teamvoided.civilization.managers.SettlementManager
-import org.teamvoided.civilization.util.lTxt
-import org.teamvoided.civilization.util.tTxt
+import org.teamvoided.civilization.util.lText
+import org.teamvoided.civilization.util.tText
 
 object SettlementCommand {
     fun init(dispatcher: CommandDispatcher<ServerCommandSource>) {
@@ -141,13 +141,13 @@ object SettlementCommand {
             ResultType.FAIL -> src.endError(results.second)
             ResultType.LOGIC -> {
                 src.sendSystemMessage(results.second)
-                src.endMsg(tTxt("To delete write /settlement delete confirm")
+                src.endMsg(tText("To delete write /settlement delete confirm")
                     .styled {
                         it.withFormatting(Formatting.GRAY, Formatting.ITALIC)
                             .withClickEvent(
                                 ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/settlement delete confirm")
                             )
-                            .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, tTxt("Click to run!")))
+                            .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, tText("Click to run!")))
                     }
                 )
             }
@@ -162,15 +162,15 @@ object SettlementCommand {
 
         if (settlements.isEmpty()) return src.endMsg("No settlements exists!")
 
-        c.source.sendSystemMessage(tTxt("Settlements:"))
-        for (setl in settlements) src.sendSystemMessage(lTxt(" - ${setl.name}"))
+        c.source.sendSystemMessage(tText("Settlements:"))
+        for (setl in settlements) src.sendSystemMessage(lText(" - ${setl.name}"))
 
         return 1
     }
 
     private fun info(c: CommandContext<ServerCommandSource>, settlement: Settlement): Int {
-        c.source.sendSystemMessage(tTxt("TEST:"))
-        c.source.sendSystemMessage(tTxt(settlement.toString()))
+        c.source.sendSystemMessage(tText("TEST:"))
+        c.source.sendSystemMessage(tText(settlement.toString()))
 
         return 1
     }
@@ -221,13 +221,13 @@ object SettlementCommand {
             if (it.id == player.uuid) continue
             SettlementManager.addInvites(it.id, settlement)
             src.server.playerManager.getPlayer(it.id)?.sendSystemMessage(
-                tTxt("You have been invited to join %s settlement by %s", settlement.name, player.name)
+                tText("You have been invited to join %s settlement by %s", settlement.name, player.name)
             )
             count++
         }
         src.sendSystemMessage(
-            if (gameProfiles.size > 1) tTxt("An invite has been sent to %s players!", count)
-            else tTxt("An invite has been sent to %s!", gameProfiles.first().name)
+            if (gameProfiles.size > 1) tText("An invite has been sent to %s players!", count)
+            else tText("An invite has been sent to %s!", gameProfiles.first().name)
         )
 
         return 1
@@ -242,7 +242,7 @@ object SettlementCommand {
         val setl = invites.first()
         SettlementManager.addCitizen(player, setl)
         SettlementManager.clearInvites(player.uuid)
-        src.sendSystemMessage(tTxt("You have joined %s settlement!", setl.name))
+        src.sendSystemMessage(tText("You have joined %s settlement!", setl.name))
 
         return 1
     }
@@ -260,8 +260,8 @@ object SettlementCommand {
             count++
         }
         src.sendSystemMessage(
-            if (gameProfiles.size > 1) tTxt("%s players have been kicked from the Settlement!", count)
-            else tTxt("%s has been kicked from the Settlement", gameProfiles.first().name)
+            if (gameProfiles.size > 1) tText("%s players have been kicked from the Settlement!", count)
+            else tText("%s has been kicked from the Settlement", gameProfiles.first().name)
         )
 
         return 1
@@ -282,7 +282,7 @@ object SettlementCommand {
             return src.endMsg("You are the leader of the settlement! You cant leave! Run /settlement delete if you want to delete your settlement.")
 
         SettlementManager.removeCitizen(player, setl)
-        src.sendSystemMessage(tTxt("You have left the %s settlement!", setl.name))
+        src.sendSystemMessage(tText("You have left the %s settlement!", setl.name))
 
         return 1
     }
@@ -299,13 +299,13 @@ object SettlementCommand {
 
                 SettlementManager.addCitizen(player, setl)
                 SettlementManager.clearInvites(player.uuid)
-                src.endMsg(tTxt("You have joined %s settlement!", setl.name))
+                src.endMsg(tText("You have joined %s settlement!", setl.name))
             }
 
             Settlement.JoinPolicy.OPEN -> {
                 SettlementManager.addCitizen(player, settlement)
                 SettlementManager.clearInvites(player.uuid)
-                src.endMsg(tTxt("You have joined %s settlement!", settlement.name))
+                src.endMsg(tText("You have joined %s settlement!", settlement.name))
             }
 
             Settlement.JoinPolicy.CLOSED -> src.endError("This settlement doesnt allow ppl to join right now!")
@@ -316,7 +316,7 @@ object SettlementCommand {
     private fun menu(c: CommandContext<ServerCommandSource>): Int {
         val src = c.source
         val player = src.player ?: return src.playerOnly()
-        val slotRemover = GuiElementBuilder(Items.GRAY_STAINED_GLASS_PANE).setName(lTxt("")).setCustomModelData(1)
+        val slotRemover = GuiElementBuilder(Items.GRAY_STAINED_GLASS_PANE).setName(lText("")).setCustomModelData(1)
 
         val setl = player.getSettlements()?.first() ?: return src.notInSettlement()
 
@@ -324,23 +324,23 @@ object SettlementCommand {
         for (x in 0..26) gui.setSlot(x, slotRemover)
 
 
-        gui.setSlot(10, GuiElementBuilder(Items.NAME_TAG).setName(lTxt(setl.name)))
+        gui.setSlot(10, GuiElementBuilder(Items.NAME_TAG).setName(lText(setl.name)))
         gui.setSlot(
             11,
             GuiElementBuilder(Items.PLAYER_HEAD)
                 .setSkullOwner(GameProfile(setl.leader, setl.leaderName()), src.server)
-                .setName(lTxt(setl.leaderName()))
+                .setName(lText(setl.leaderName()))
         )
         gui.setSlot(
             12,
-            GuiElementBuilder(Items.CRAFTING_TABLE).setName(tTxt("Settlement Type: %s ", setl.getType().formatted()))
+            GuiElementBuilder(Items.CRAFTING_TABLE).setName(tText("Settlement Type: %s ", setl.getType().formatted()))
         )
         gui.setSlot(
             13,
-            GuiElementBuilder(Items.PAPER).setName(tTxt("Settlement Join Policy : %s ", setl.joinPolicy.formatted()))
+            GuiElementBuilder(Items.PAPER).setName(tText("Settlement Join Policy : %s ", setl.joinPolicy.formatted()))
         )
-        val playerItem = GuiElementBuilder(Items.ENCHANTED_BOOK).setName(lTxt("Active Players"))
-        for (ply in setl.getCitizens()) playerItem.addLoreLine(lTxt(ply.value))
+        val playerItem = GuiElementBuilder(Items.ENCHANTED_BOOK).setName(lText("Active Players"))
+        for (ply in setl.getCitizens()) playerItem.addLoreLine(lText(ply.value))
         gui.setSlot(16, playerItem)
 
 
@@ -349,7 +349,7 @@ object SettlementCommand {
     }
 
     private fun ServerCommandSource.endMsg(text: String, vararg args: Any): Int {
-        this.sendSystemMessage(tTxt(text, *args))
+        this.sendSystemMessage(tText(text, *args))
         return 0
     }
 
@@ -359,7 +359,7 @@ object SettlementCommand {
     }
 
     private fun ServerCommandSource.endError(text: String, vararg args: Any): Int {
-        this.sendError(tTxt(text, *args))
+        this.sendError(tText(text, *args))
         return 0
     }
 

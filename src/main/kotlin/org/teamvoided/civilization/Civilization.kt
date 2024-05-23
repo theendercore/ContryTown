@@ -17,7 +17,7 @@ import org.teamvoided.civilization.init.CivCommands
 import org.teamvoided.civilization.managers.PlayerDataManager
 import org.teamvoided.civilization.managers.SettlementManager
 import org.teamvoided.civilization.util.Util
-import org.teamvoided.civilization.util.tTxt
+import org.teamvoided.civilization.util.tText
 
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
@@ -43,7 +43,7 @@ object Civilization {
             val currentChunk = ChunkPos(pos)
             if (last?.let { ChunkPos(it) != currentChunk } == true) {
                 SettlementManager.getByChunkPos(currentChunk)?.let {
-                    entity.sendMessage(tTxt("You have entered ${it.name} Settlement!"), true)
+                    entity.sendMessage(tText("You have entered ${it.name} Settlement!"), true)
                 }
             }
         }

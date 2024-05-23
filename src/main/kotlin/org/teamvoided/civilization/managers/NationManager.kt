@@ -9,7 +9,7 @@ import org.teamvoided.civilization.compat.WebMaps
 import org.teamvoided.civilization.data.Nation
 import org.teamvoided.civilization.data.ResultType
 import org.teamvoided.civilization.util.Util
-import org.teamvoided.civilization.util.tTxt
+import org.teamvoided.civilization.util.tText
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
@@ -35,14 +35,14 @@ object NationManager {
         val data = PlayerDataManager.getDataD(player)
         if (data == null) return Pair(
             ResultType.FAIL,
-            tTxt("You are not in a settlement you cant crete a nation one!")
+            tText("You are not in a settlement you cant crete a nation one!")
         )
         if (!data.settlements.containsValue(PlayerDataManager.Role.LEADER)) return Pair(
             ResultType.FAIL,
-            tTxt("You are not in a settlement leader you cant crete a nation!")
+            tText("You are not in a settlement leader you cant crete a nation!")
         )
         if (!data.nations.isNullOrEmpty()) return Pair(
-            ResultType.FAIL, tTxt("You are in a settlement you cant crete a new one!")
+            ResultType.FAIL, tText("You are in a settlement you cant crete a new one!")
         )
         val settlement =
             SettlementManager.getById(data.settlements.filterValues { it == PlayerDataManager.Role.LEADER }.keys.first())
@@ -60,7 +60,7 @@ object NationManager {
             PlayerDataManager.PlayerData(data.settlements, mapOf(Pair(newNation.id, PlayerDataManager.Role.LEADER)))
         )
         WebMaps.addNation(newNation)
-        return Pair(ResultType.SUCCESS, tTxt("Successfully created a nation!"))
+        return Pair(ResultType.SUCCESS, tText("Successfully created a nation!"))
     }
 
     fun save(): Int {

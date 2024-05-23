@@ -32,5 +32,5 @@ object Util {
     fun getGlobalPath(): Path =
         FabricLoader.getInstance().gameDir.resolve("data").resolve(Civilization.MODID)
 
-    fun emptyResult(): Pair<ResultType, MutableText> = Pair(ResultType.SUCCESS, tTxt("Result!"))
+    fun emptyResult(): Pair<ResultType, MutableText> = Pair(ResultType.SUCCESS, tText("Result!"))
 }

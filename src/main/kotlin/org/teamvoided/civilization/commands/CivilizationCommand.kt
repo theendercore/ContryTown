@@ -6,26 +6,37 @@ import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.server.command.ServerCommandSource
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType.settlementArg
-import org.teamvoided.civilization.data.Settlement
+import org.teamvoided.civilization.commands.permisions.Perms
+import org.teamvoided.civilization.commands.permisions.Perms.require
+import org.teamvoided.civilization.data.*
 import org.teamvoided.civilization.managers.NationManager
 import org.teamvoided.civilization.managers.SettlementManager
-import org.teamvoided.civilization.util.tTxt
+import org.teamvoided.civilization.util.tText
 import org.teamvoided.civilization.util.teleport
 
 object CivilizationCommand {
 
+    @Suppress("MagicNumber")
     fun init(dispatcher: CommandDispatcher<ServerCommandSource>) {
         val civilizationNode = literal("civilization").build()
         dispatcher.root.addChild(civilizationNode)
 
-        val loadNode = literal("load").executes(::load).build()
+        val loadNode = literal("load")
+            .requires(Perms.CIV_LOAD.require(4))
+            .executes(::load)
+            .build()
         civilizationNode.addChild(loadNode)
 
-        val saveNode = literal("save").executes(::save).build()
+        val saveNode = literal("save")
+            .requires(Perms.CIV_SAVE.require(4))
+            .executes(::save)
+            .build()
         civilizationNode.addChild(saveNode)
 
 
-        val tpNode = literal("tp").requires { it.hasPermission(2) }.build()
+        val tpNode = literal("tp")
+            .requires(Perms.CIV_TP.require(2))
+            .build()
         civilizationNode.addChild(tpNode)
         val tpSetlNode = literal("settlement").build()
         tpNode.addChild(tpSetlNode)
@@ -53,11 +64,11 @@ object CivilizationCommand {
         val t1 = SettlementManager.load(server, world)
         val t2 = NationManager.load()
         if (t1 != 1 || t2 != 1) {
-            src.sendSystemMessage(tTxt("Failed to load or to start loading!"))
+            src.sendSystemMessage(tText("Failed to load or to start loading!"))
 
             return 0
         }
-        src.sendSystemMessage(tTxt("Files loaded successfully!"))
+        src.sendSystemMessage(tText("Files loaded successfully!"))
 
         return 1
     }
@@ -69,11 +80,11 @@ object CivilizationCommand {
         val t1 = SettlementManager.save(server, world)
         val t2 = NationManager.save()
         if (t1 != 1 || t2 != 1) {
-            src.sendSystemMessage(tTxt("Failed to save or to start saving!"))
+            src.sendSystemMessage(tText("Failed to save or to start saving!"))
 
             return 0
         }
-        src.sendSystemMessage(tTxt("Files saved successfully!"))
+        src.sendSystemMessage(tText("Files saved successfully!"))
 
         return 1
     }
@@ -85,8 +96,14 @@ object CivilizationCommand {
         settlement.center
 
         player.teleport(settlement.center)
-        src.sendSystemMessage(tTxt("Teleported to %s!", settlement.name))
+        src.sendSystemMessage(tText("Teleported to %s!", settlement.name))
         return 1
     }
 
 }
+
+
+
+
+interface CivCommandError : CommandError
+

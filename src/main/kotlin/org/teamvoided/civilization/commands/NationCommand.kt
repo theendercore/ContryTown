@@ -17,8 +17,8 @@ import org.teamvoided.civilization.data.Nation
 import org.teamvoided.civilization.data.Settlement
 import org.teamvoided.civilization.managers.NationManager
 import org.teamvoided.civilization.util.Util.emptyResult
-import org.teamvoided.civilization.util.lTxt
-import org.teamvoided.civilization.util.tTxt
+import org.teamvoided.civilization.util.lText
+import org.teamvoided.civilization.util.tText
 
 object NationCommand {
     fun init(dispatcher: CommandDispatcher<ServerCommandSource>) {
@@ -103,19 +103,19 @@ object NationCommand {
     private fun list(c: CommandContext<ServerCommandSource>): Int {
         val nations = NationManager.getAllNations()
         if (nations.isEmpty()) {
-            c.source.sendSystemMessage(tTxt("No nations exists!"))
+            c.source.sendSystemMessage(tText("No nations exists!"))
             return 0
         }
-        c.source.sendSystemMessage(tTxt("Nations:"))
-        for (nat in nations) c.source.sendSystemMessage(lTxt(" - ${nat.name}"))
+        c.source.sendSystemMessage(tText("Nations:"))
+        for (nat in nations) c.source.sendSystemMessage(lText(" - ${nat.name}"))
 
         return 1
     }
 
 
     private fun info(c: CommandContext<ServerCommandSource>, nation: Nation): Int {
-        c.source.sendSystemMessage(tTxt("TEST:"))
-        c.source.sendSystemMessage(tTxt(nation.toString()))
+        c.source.sendSystemMessage(tText("TEST:"))
+        c.source.sendSystemMessage(tText(nation.toString()))
         return 1
     }
 
@@ -156,14 +156,14 @@ object NationCommand {
         val src = c.source
         val world = src.world
         val player = src.player ?: return 0
-        src.sendSystemMessage(tTxt("gui"))
+        src.sendSystemMessage(tText("gui"))
         return 1
     }
 
     private fun requirements(c: CommandContext<ServerCommandSource>): Int {
         val src = c.source
-        src.sendSystemMessage(tTxt("Requirements:"))
-        src.sendSystemMessage(tTxt("None :)"))
+        src.sendSystemMessage(tText("Requirements:"))
+        src.sendSystemMessage(tText("None :)"))
         return 1
     }
 }
