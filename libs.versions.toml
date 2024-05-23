@@ -12,7 +12,8 @@ player_data = "0.5.0+1.20.5"
 server_translations = "2.3.0+1.20.5-rc2"
 jts_core = "1.16.1"
 
-
+luckperms = "5.4"
+fabric-permissions-api = "0.3.1"
 
 [libraries]
 farrow = { module = "net.wiredtomato:farrow", version.ref = "farrow" }
@@ -22,6 +23,9 @@ sgui = { module = "eu.pb4:sgui", version.ref = "sgui" }
 player-data-api = { module = "eu.pb4:player-data-api", version.ref = "player_data" }
 server-translations-api = { module = "xyz.nucleoid:server-translations-api", version.ref = "server_translations" }
 jts-core = { module = "org.locationtech.jts:jts-core", version.ref = "jts_core" }
+
+luckperms-api = { module = "net.luckperms:api", version.ref = "luckperms" }
+fabric-permissions-api = { module = "me.lucko:fabric-permissions-api", version.ref = "fabric-permissions-api" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

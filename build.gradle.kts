@@ -60,6 +60,9 @@ dependencies {
 
     implementation(libs.jts.core)
 //    modImplementation("maven.modrinth:flan:1.20.2-1.8.11")
+
+    modImplementation(libs.fabric.permissions.api)
+    compileOnly(libs.luckperms.api)
 }
 
 sourceSets["main"].resources.srcDir("src/main/generated")
