@@ -7,8 +7,6 @@ import org.teamvoided.civilization.commands.SettlementCommand
 import org.teamvoided.civilization.commands.TestCommand
 
 object CivCommands {
-    var DEBUG_MODE = false
-
     fun init(){
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             CivilizationCommand.init(dispatcher)

@@ -19,7 +19,6 @@ import net.minecraft.util.Formatting
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType.settlementArg
 import org.teamvoided.civilization.data.Settlement
-import org.teamvoided.civilization.init.CivCommands.DEBUG_MODE
 import org.teamvoided.civilization.managers.PlayerDataManager
 import org.teamvoided.civilization.util.lText
 import java.util.*
@@ -46,13 +45,6 @@ object TestCommand {
                 .executes { text(it, SettlementArgumentType.getSettlement(it)) }
                 .build()
         )
-
-        val debugMode = literal("debug_mode").executes {
-            DEBUG_MODE = !DEBUG_MODE
-            it.source.sendSystemMessage(lText("Debug mode : $DEBUG_MODE"))
-            1
-        }.build()
-        dispatcher.root.addChild(debugMode)
 
         dispatcher.register(literal("tq").redirect(testNode))
     }
