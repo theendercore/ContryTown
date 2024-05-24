@@ -1,5 +1,8 @@
 package org.teamvoided.civilization.commands
 
+import arrow.core.raise.either
+import arrow.core.raise.ensure
+import arrow.core.right
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.context.CommandContext
 import net.minecraft.server.command.CommandManager.literal
@@ -8,11 +11,12 @@ import org.teamvoided.civilization.commands.argument.SettlementArgumentType
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType.settlementArg
 import org.teamvoided.civilization.commands.permisions.Perms
 import org.teamvoided.civilization.commands.permisions.Perms.require
-import org.teamvoided.civilization.data.*
+import org.teamvoided.civilization.data.CommandError
+import org.teamvoided.civilization.data.Settlement
 import org.teamvoided.civilization.managers.NationManager
 import org.teamvoided.civilization.managers.SettlementManager
-import org.teamvoided.civilization.util.tText
-import org.teamvoided.civilization.util.teleport
+import org.teamvoided.civilization.util.*
+
 
 object CivilizationCommand {
 
@@ -43,67 +47,52 @@ object CivilizationCommand {
         val tpSetlNameArg = settlementArg().executes { tp(it, SettlementArgumentType.getSettlement(it)) }.build()
         tpSetlNode.addChild(tpSetlNameArg)
 
-        /*
-                val infoNode = literal("info").executes(::info).build()
-                civilizationNode.addChild(infoNode)
 
-                val helpNode = literal("help").executes(::help).build()
-                civilizationNode.addChild(helpNode)
-
-                val menuNode = literal("menu").executes(::menu).build()
-                civilizationNode.addChild(menuNode)
-        */
 
         dispatcher.register(literal("civ").redirect(civilizationNode))
     }
 
-    private fun load(c: CommandContext<ServerCommandSource>): Int {
-        val src = c.source
-        val server = src.server
-        val world = src.world
-        val t1 = SettlementManager.load(server, world)
-        val t2 = NationManager.load()
-        if (t1 != 1 || t2 != 1) {
-            src.sendSystemMessage(tText("Failed to load or to start loading!"))
+    private fun load(c: CommandContext<ServerCommandSource>): Int = c.serverWorld { src, server, world ->
+        either {
+            val t1 = SettlementManager.load(server, world)
+            ensure(t1 >= 1) { FailedToLoad("settlement") }
+            val t2 = NationManager.load()
 
-            return 0
+            ensure(t2 >= 1) { FailedToLoad("nation") }
+
+            src.tFeedback(cmd("files", "loaded", "success"))
+            1
         }
-        src.sendSystemMessage(tText("Files loaded successfully!"))
-
-        return 1
     }
 
-    private fun save(c: CommandContext<ServerCommandSource>): Int {
-        val src = c.source
-        val server = src.server
-        val world = src.world
-        val t1 = SettlementManager.save(server, world)
-        val t2 = NationManager.save()
-        if (t1 != 1 || t2 != 1) {
-            src.sendSystemMessage(tText("Failed to save or to start saving!"))
+    private fun save(c: CommandContext<ServerCommandSource>): Int = c.serverWorld { src, server, world ->
+        either {
+            val t1 = SettlementManager.save(server, world)
+            ensure(t1 >= 1) { FailedToSave("settlement") }
+            val t2 = NationManager.save()
+            ensure(t2 >= 1) { FailedToSave("nation") }
 
-            return 0
+            src.tFeedback(cmd("files", "saved", "success"))
+            1
         }
-        src.sendSystemMessage(tText("Files saved successfully!"))
-
-        return 1
     }
 
-    private fun tp(c: CommandContext<ServerCommandSource>, settlement: Settlement): Int {
-        val src = c.source
-        val player = src.player ?: return 0
-
-        settlement.center
-
-        player.teleport(settlement.center)
-        src.sendSystemMessage(tText("Teleported to %s!", settlement.name))
-        return 1
-    }
-
+    private fun tp(c: CommandContext<ServerCommandSource>, settlement: Settlement): Int =
+        c.serverWorldPlayer { src, _, _, player ->
+            player.teleport(settlement.center)
+            src.tFeedback(cmd("teleported", "to", "%s", settlement.name))
+            return@serverWorldPlayer 1.right()
+        }
 }
-
-
-
 
 interface CivCommandError : CommandError
 
+data class FailedToLoad(val failedSection: String) : CivCommandError {
+    override fun key(): String = civ("failed", "to", "load", failedSection)
+}
+
+data class FailedToSave(val failedSection: String) : CivCommandError {
+    override fun key(): String = civ("failed", "to", "save", failedSection)
+}
+
+fun civ(vararg args: String): String = cmd("civilization", *args)

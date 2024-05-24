@@ -8,22 +8,27 @@ import com.mojang.brigadier.context.CommandContext
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.command.ServerCommandSource
+import net.minecraft.text.Text
 import net.minecraft.world.World
 import org.teamvoided.civilization.Civilization.log
 import org.teamvoided.civilization.data.CommandError
 import org.teamvoided.civilization.data.GenericCommandError
 import org.teamvoided.civilization.data.SenderIsNotPlayerError
+import org.teamvoided.civilization.data.WitheText
 
 
 fun ServerCommandSource.tError(text: String, vararg args: Any) = this.sendError(tText(text, *args))
 fun ServerCommandSource.tMessage(text: String, vararg args: Any) = this.sendSystemMessage(tText(text, *args))
 fun ServerCommandSource.litMessage(text: String) = this.sendSystemMessage(lText(text))
 fun ServerCommandSource.tFeedback(text: String, vararg args: Any, broadcast: Boolean = false) =
-    this.sendFeedback({ tText(text, *args) }, broadcast)
+    this.sendFeedback(tText(text, *args).fn(), broadcast)
 
 fun ServerCommandSource.litFeedback(text: String, broadcast: Boolean = false) =
-    this.sendFeedback({ lText(text) }, broadcast)
+    this.sendFeedback(lText(text).fn(), broadcast)
 
+fun ServerCommandSource.error(text: Text) = this.sendError(text)
+fun ServerCommandSource.message(text: Text) = this.sendSystemMessage(text)
+fun ServerCommandSource.feedback(text: Text, broadcast: Boolean = false) = this.sendFeedback(text.fn(), broadcast)
 
 
 typealias ServerWorldFn = (src: ServerCommandSource, server: MinecraftServer, world: World) -> Either<CommandError, Int>
@@ -41,7 +46,8 @@ fun CommandContext<ServerCommandSource>.serverWorld(fn: ServerWorldFn): Int {
         ensureNotNull(world) { GenericCommandError("world") }
         fn(src, server, world).bind()
     }.getOrElse {
-        src.tError(it.key())
+        if (it is WitheText) src.error(it.text())
+        else src.tError(it.key())
         0
     }
 

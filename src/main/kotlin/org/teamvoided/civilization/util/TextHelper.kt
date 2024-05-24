@@ -14,3 +14,5 @@ fun String.toTTxt(): Text = tText(this)
 fun lText(text: String): MutableText = Text.literal(text)
 fun String.toLTxt(): Text = lText(this)
 
+fun Text.fn(): () -> Text = { this }
+
