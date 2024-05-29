@@ -8,9 +8,16 @@ import java.util.function.Predicate
 object Perms {
 
     val CIV = command("civilization")
+
     val CIV_LOAD = civilization("load")
     val CIV_SAVE = civilization("save")
+    val CIV_SAVE_ALL = civilization("save_all")
+
     val CIV_TP = civilization("tp")
+    val CIV_SET = civilization("set")
+    val CIV_DELETE = civilization("delete")
+
+
 
 
     val SETTLEMENT = command("settlement")

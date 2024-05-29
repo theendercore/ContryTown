@@ -1,5 +1,6 @@
 package org.teamvoided.civilization.commands
 
+import arrow.core.raise.ensureNotNull
 import com.mojang.authlib.GameProfile
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.context.CommandContext
@@ -16,40 +17,82 @@ import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Style
 import net.minecraft.util.Formatting
-import org.teamvoided.civilization.commands.argument.SettlementArgumentType
+import net.minecraft.util.WorldSavePath
+import net.minecraft.world.dimension.DimensionType
+import org.teamvoided.civilization.Civilization.log
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType.settlementArg
+import org.teamvoided.civilization.data.DebuggingError
 import org.teamvoided.civilization.data.Settlement
 import org.teamvoided.civilization.managers.PlayerDataManager
-import org.teamvoided.civilization.util.lText
+import org.teamvoided.civilization.util.*
 import java.util.*
 
 @Suppress("MagicNumber")
 object TestCommand {
+    @Suppress("UNUSED_VARIABLE")
     fun init(dispatcher: CommandDispatcher<ServerCommandSource>) {
-        val testNode = literal("qtest").build()
-        dispatcher.root.addChild(testNode)
-        val inbuiltGuiNode = literal("inbuilt_gui").executes(this::test).build()
-        testNode.addChild(inbuiltGuiNode)
+        val civTest = literal("civ_test")
+            .build()
+            .childOf(dispatcher.root)
 
-        val mapLinkNode = literal("map_link").executes(this::mapLink).build()
-        dispatcher.root.addChild(mapLinkNode)
+        val inbuiltGui = literal("inbuilt_gui")
+            .executes(::inbuiltGui)
+            .build()
+            .childOf(civTest)
 
-        val clearDataNode = literal("clear_data").executes(this::clearData).build()
-        testNode.addChild(clearDataNode)
+        val mapLink = literal("map_link")
+            .executes(::mapLink)
+            .build()
+            .addChild(inbuiltGui)
+
+        val data = literal("data")
+            .build()
+            .childOf(civTest)
+
+        val dataDump = literal("dump")
+            .executes(::dataDump)
+            .build()
+            .childOf(data)
+
+        val dataClear = literal("clear")
+            .executes(::dataClear)
+            .build()
+            .childOf(data)
+
+        val text = literal("text")
+            .build()
+            .childOf(civTest)
+        val textName = settlementArg()
+            .executes(::text)
+            .build()
+            .childOf(text)
 
 
-        val debugNode = literal("text").build()
-        testNode.addChild(debugNode)
-        debugNode.addChild(
-            settlementArg()
-                .executes { text(it, SettlementArgumentType.getSettlement(it)) }
-                .build()
-        )
+        val t = literal("t")
+            .executes(::t)
+            .build()
+            .childOf(civTest)
 
-        dispatcher.register(literal("tq").redirect(testNode))
+        dispatcher.register(literal("ct").redirect(civTest))
     }
 
-    private fun test(c: CommandContext<ServerCommandSource>): Int {
+    private fun t(c: CommandContext<ServerCommandSource>): Int = c.serverWorldPlayer { src, server, world, player ->
+        for (worldI in server.worlds) {
+            val path = DimensionType.getSaveDirectory(worldI.registryKey, server.getSavePath(WorldSavePath.ROOT))
+
+            src.tMessage(
+                path.toString()
+            )
+            src.tMessage(path.resolve("data").toString())
+            src.tMessage("")
+        }
+
+        1
+    }
+
+
+    @Suppress("LongMethod", "MaxLineLength", "TooGenericExceptionCaught")
+    private fun inbuiltGui(c: CommandContext<ServerCommandSource>): Int {
         try {
             val player = c.source.player
             val gui: SimpleGui = object : SimpleGui(ScreenHandlerType.GENERIC_3X3, player, false) {
@@ -82,7 +125,7 @@ object TestCommand {
                     Items.STONE_PICKAXE.defaultStack,
                     Items.WOODEN_PICKAXE.defaultStack
                 ), 10, false
-            ) { x: Int, y: ClickType, z: SlotActionType -> })
+            ) { _: Int, _: ClickType, _: SlotActionType -> })
 
             gui.setSlot(
                 2,
@@ -98,7 +141,7 @@ object TestCommand {
                 itemStack.count = x
                 gui.setSlot(x, GuiElement(
                     itemStack
-                ) { index: Int, clickType: ClickType?, actionType: SlotActionType? -> })
+                ) { _: Int, _: ClickType?, _: SlotActionType? -> })
             }
 
             gui.setSlot(
@@ -119,7 +162,7 @@ object TestCommand {
                 lText("Bye").setStyle(Style.EMPTY.withItalic(false).withBold(true))
             ).addLoreLine(lText("Some lore")).addLoreLine(lText("More lore").formatted(Formatting.RED))
                 .setCount(3)
-                .setCallback { index: Int, clickType: ClickType?, actionType: SlotActionType? -> gui.close() })
+                .setCallback { _: Int, _: ClickType?, _: SlotActionType? -> gui.close() })
 
             gui.setSlot(8, GuiElementBuilder().setItem(Items.TNT).glow().setName(
                 lText("Test :)").setStyle(Style.EMPTY.withItalic(false).withBold(true))
@@ -141,36 +184,41 @@ object TestCommand {
 
             gui.open()
         } catch (e: Exception) {
-            e.printStackTrace()
+            log.error("Error in test", e)
         }
         return 0
     }
 
     private fun mapLink(c: CommandContext<ServerCommandSource>): Int {
-        c.source.sendSystemMessage(lText("http://localhost:8080/"))
+        c.source.litMessage("http://localhost:8080/")
         return 1
     }
 
-    private fun clearData(c: CommandContext<ServerCommandSource>): Int {
-        val src = c.source
-        val player = src.player ?: return 0
+    private fun dataClear(c: CommandContext<ServerCommandSource>): Int = c.serverWorldPlayer { src, _, _, player ->
         PlayerDataManager.clearD(player)
-        src.sendSystemMessage(lText("data reset"))
-        return 1
+        src.tMessage("Data cleared!")
+
+        1
     }
 
+    private fun dataDump(c: CommandContext<ServerCommandSource>): Int = c.serverWorldPlayer { src, _, _, player ->
+        val data = PlayerDataManager.getDataD(player)
+        ensureNotNull(data) { DebuggingError("No data found!") }
+        data.toText().siblings.forEach { src.message(it) }
+
+        1
+    }
 
     private fun text(c: CommandContext<ServerCommandSource>, settlement: Settlement): Int {
         val src = c.source
         val player = src.player ?: return 0
-        val slotRemover = GuiElementBuilder(Items.GRAY_STAINED_GLASS_PANE).hideTooltip()
-
+        val slotRemover = GuiElementBuilder(Items.GRAY_STAINED_GLASS_PANE).setCustomModelData(1).hideTooltip()
 
         val gui = SimpleGui(ScreenHandlerType.GENERIC_3X3, player, false)
         for (x in 0..8) gui.setSlot(x, slotRemover)
 
         gui.setSlot(
-            1,
+            4,
             GuiElementBuilder(Items.STICK)
                 .setLore(settlement.toText().siblings)
         )

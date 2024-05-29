@@ -25,6 +25,9 @@ object Civilization {
     const val MODID = "civilization"
     val DEV_ENV = FabricLoader.getInstance().isDevelopmentEnvironment
 
+    var SERVER_REF: MinecraftServer? = null
+        private set
+
     @JvmField
     val log: Logger = LoggerFactory.getLogger(Civilization::class.simpleName)
 
@@ -33,6 +36,7 @@ object Civilization {
         Util.getGlobalPath().toFile().mkdirs()
         CivCommands.init()
         PlayerDataManager.init()
+        ServerLifecycleEvents.SERVER_STARTING.register(::beforeServerLoads)
         ServerLifecycleEvents.SERVER_STARTED.register(::afterServerLoads)
         LivingEntityMoveEvent.EVENT.register(::playerChangeChunk)
 
@@ -50,6 +54,9 @@ object Civilization {
     }
 
     fun id(path: String) = Identifier(MODID, path)
+    private fun beforeServerLoads(server: MinecraftServer) {
+        SERVER_REF = server
+    }
 
     private fun afterServerLoads(server: MinecraftServer) {
         for (world in server.worlds) Util.getWorldPath(server, world).toFile().mkdirs()
@@ -58,5 +65,7 @@ object Civilization {
 //        NationManager.postServerInit(server)
         if (FabricLoader.getInstance().isModLoaded("squaremap"))
             SquaremapIntegrations.reg()
+
+        SERVER_REF = server
     }
 }
