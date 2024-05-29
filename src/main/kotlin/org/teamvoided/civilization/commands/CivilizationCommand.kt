@@ -1,17 +1,19 @@
 package org.teamvoided.civilization.commands
 
-import arrow.core.raise.either
 import arrow.core.raise.ensure
-import arrow.core.right
+import arrow.core.raise.ensureNotNull
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.context.CommandContext
 import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.server.command.ServerCommandSource
+import net.minecraft.server.network.ServerPlayerEntity
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType.settlementArg
 import org.teamvoided.civilization.commands.permisions.Perms
 import org.teamvoided.civilization.commands.permisions.Perms.require
-import org.teamvoided.civilization.data.CommandError
+import org.teamvoided.civilization.data.FailedToLoad
+import org.teamvoided.civilization.data.FailedToSave
+import org.teamvoided.civilization.data.SenderIsNotPlayerError
 import org.teamvoided.civilization.data.Settlement
 import org.teamvoided.civilization.managers.NationManager
 import org.teamvoided.civilization.managers.SettlementManager
@@ -20,79 +22,138 @@ import org.teamvoided.civilization.util.*
 
 object CivilizationCommand {
 
-    @Suppress("MagicNumber")
-    fun init(dispatcher: CommandDispatcher<ServerCommandSource>) {
-        val civilizationNode = literal("civilization").build()
-        dispatcher.root.addChild(civilizationNode)
 
-        val loadNode = literal("load")
+    @Suppress("MagicNumber", "UNUSED_VARIABLE")
+    fun init(dispatcher: CommandDispatcher<ServerCommandSource>) {
+        val civilizationNode = literal("civilization")
+            .requires(Perms.CIV.require(0))
+            .build()
+            .childOf(dispatcher.root)
+
+        val load = literal("load")
             .requires(Perms.CIV_LOAD.require(4))
             .executes(::load)
             .build()
-        civilizationNode.addChild(loadNode)
+            .childOf(civilizationNode)
 
-        val saveNode = literal("save")
+        val save = literal("save")
             .requires(Perms.CIV_SAVE.require(4))
             .executes(::save)
             .build()
-        civilizationNode.addChild(saveNode)
+            .childOf(civilizationNode)
+
+        val saveAll = literal("save_all")
+            .requires(Perms.CIV_SAVE_ALL.require(4))
+            .executes(::saveAll)
+            .build()
+            .childOf(civilizationNode)
 
 
-        val tpNode = literal("tp")
+        val tp = literal("tp")
             .requires(Perms.CIV_TP.require(2))
             .build()
-        civilizationNode.addChild(tpNode)
-        val tpSetlNode = literal("settlement").build()
-        tpNode.addChild(tpSetlNode)
-        val tpSetlNameArg = settlementArg().executes { tp(it, SettlementArgumentType.getSettlement(it)) }.build()
-        tpSetlNode.addChild(tpSetlNameArg)
+            .childOf(civilizationNode)
+        val tpSettlement = literal("settlement")
+            .build()
+            .childOf(tp)
+        val tpSettlementName = settlementArg()
+            .executes(::tp)
+            .build()
+            .childOf(tpSettlement)
 
+        val delete = literal("delete")
+            .requires(Perms.CIV_DELETE.require(4))
+            .build()
+            .childOf(civilizationNode)
+        val deleteSettlement = literal("settlement")
+            .build()
+            .childOf(delete)
+        val deleteSettlementName = settlementArg()
+            .executes(::delete)
+            .build()
+            .childOf(deleteSettlement)
 
+        val set = literal("set")
+            .requires(Perms.CIV_SET.require(2))
+            .build()
+            .childOf(civilizationNode)
+        val setSettlement = literal("settlement")
+            .build()
+            .childOf(set)
+        val setSettlementName = settlementArg()
+            .build()
+            .childOf(setSettlement)
+        val setSettlementLeader = literal("leader")
+            .executes { setSettlementLeader(it, SettlementArgumentType.getSettlement(it), null) }
+            .build()
+            .childOf(setSettlementName)
 
         dispatcher.register(literal("civ").redirect(civilizationNode))
     }
 
-    private fun load(c: CommandContext<ServerCommandSource>): Int = c.serverWorld { src, server, world ->
-        either {
-            val t1 = SettlementManager.load(server, world)
-            ensure(t1 >= 1) { FailedToLoad("settlement") }
-            val t2 = NationManager.load()
+    private fun delete(c: CommandContext<ServerCommandSource>, settlement: Settlement): Int =
+        c.serverWorld { src, server, _ ->
+            SettlementManager.deleteSettlement(settlement, server)
 
-            ensure(t2 >= 1) { FailedToLoad("nation") }
-
-            src.tFeedback(cmd("files", "loaded", "success"))
+            src.tFeedback(cmd("settlement", "deleted", "success"))
             1
         }
+
+    private fun load(c: CommandContext<ServerCommandSource>): Int = c.serverWorld { src, server, world ->
+        val t1 = SettlementManager.load(server, world)
+        ensure(t1 >= 1) { FailedToLoad("settlement") }
+        val t2 = NationManager.load()
+        ensure(t2 >= 1) { FailedToLoad("nation") }
+
+        src.tFeedback(cmd("load", "success"))
+        1
     }
 
     private fun save(c: CommandContext<ServerCommandSource>): Int = c.serverWorld { src, server, world ->
-        either {
-            val t1 = SettlementManager.save(server, world)
-            ensure(t1 >= 1) { FailedToSave("settlement") }
-            val t2 = NationManager.save()
-            ensure(t2 >= 1) { FailedToSave("nation") }
+        val t1 = SettlementManager.save(server, world)
+        ensure(t1 >= 1) { FailedToSave("settlement") }
+        val t2 = NationManager.save()
+        ensure(t2 >= 1) { FailedToSave("nation") }
 
-            src.tFeedback(cmd("files", "saved", "success"))
-            1
-        }
+        src.tFeedback(cmd("save", "success"))
+        1
+    }
+
+    private fun loadAll(c: CommandContext<ServerCommandSource>): Int = c.serverWorld { src, server, world ->
+        SettlementManager.loadAll(server)
+        src.tFeedback(cmd("load", "all", "success"))
+        1
+    }
+
+    private fun saveAll(c: CommandContext<ServerCommandSource>): Int = c.serverWorld { src, server, _ ->
+        SettlementManager.saveAll(server)
+        src.tFeedback(cmd("save", "all", "success"))
+        1
     }
 
     private fun tp(c: CommandContext<ServerCommandSource>, settlement: Settlement): Int =
         c.serverWorldPlayer { src, _, _, player ->
             player.teleport(settlement.center)
             src.tFeedback(cmd("teleported", "to", "%s", settlement.name))
-            return@serverWorldPlayer 1.right()
+            return@serverWorldPlayer 1
         }
+
+    private fun setSettlementLeader(
+        c: CommandContext<ServerCommandSource>, settlement: Settlement, leader: ServerPlayerEntity?
+    ): Int = c.serverWorldNullPlayer { src, _, _, player ->
+
+        val newLeader = leader ?: player
+        ensureNotNull(newLeader) { SenderIsNotPlayerError }
+        try {
+            SettlementManager.setSettlementLeader(settlement, newLeader)
+            src.tFeedback(cmd("set", "leader", "to", "%s", newLeader.name.string))
+        } catch (e: Exception) {
+            e.printStackTrace()
+
+        }
+        1
+    }
+
+
+    fun civ(vararg args: String): String = cmd("civilization", *args)
 }
-
-interface CivCommandError : CommandError
-
-data class FailedToLoad(val failedSection: String) : CivCommandError {
-    override fun key(): String = civ("failed", "to", "load", failedSection)
-}
-
-data class FailedToSave(val failedSection: String) : CivCommandError {
-    override fun key(): String = civ("failed", "to", "save", failedSection)
-}
-
-fun civ(vararg args: String): String = cmd("civilization", *args)

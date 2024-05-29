@@ -1,5 +1,6 @@
 package org.teamvoided.civilization.data
 
+import arrow.optics.OpticsCopyMarker
 import kotlinx.serialization.Serializable
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.MutableText
@@ -16,6 +17,7 @@ import org.teamvoided.civilization.util.buildText
 import org.teamvoided.civilization.util.iface.Textable
 import java.util.*
 
+@OpticsCopyMarker
 @Serializable
 data class Settlement(
     @Serializable(with = UUIDSerializer::class) val id: UUID,
@@ -77,10 +79,11 @@ data class Settlement(
         updateType()
     }
 
-    fun clearCitizens() {
-        val x = citizens[leader]!!
-        citizens.clear()
-        citizens[leader] = x
+    fun setLeader(newLeader: ServerPlayerEntity): Settlement {
+        return this.copy(
+            leader = newLeader.uuid,
+            citizens = (citizens + mutableMapOf(newLeader.uuid to newLeader.name.string)).toMutableMap()
+        )
     }
 
     fun leaderName() = citizens[leader]!!

@@ -8,6 +8,7 @@ import org.teamvoided.civilization.Civilization.log
 import org.teamvoided.civilization.compat.WebMaps
 import org.teamvoided.civilization.data.Nation
 import org.teamvoided.civilization.data.ResultType
+import org.teamvoided.civilization.util.JSON
 import org.teamvoided.civilization.util.Util
 import org.teamvoided.civilization.util.tText
 import java.io.File
@@ -25,6 +26,9 @@ object NationManager {
 
     fun getById(id: UUID): Nation? = nations.find { it.id == id }
     fun getByName(name: String): Nation? = nations.find { it.nameId == name }
+
+
+    fun getName(id: UUID): String? = nations.find { it.id == id }?.nameId
 
     fun getAllNations(): List<Nation> {
         return nations.toList()
@@ -69,7 +73,7 @@ object NationManager {
             Thread {
                 try {
                     FileWriter(getNationSaveFile()).use {
-                        it.write(Util.json.encodeToString(ListSerializer(Nation.serializer()), nations))
+                        it.write(JSON.encodeToString(ListSerializer(Nation.serializer()), nations))
                     }
                     log.info("Successfully saved Nations!")
                 } catch (e: Exception) {
@@ -90,7 +94,7 @@ object NationManager {
             try {
                 val stringData = FileReader(getNationSaveFile()).use { it.readText() }
                 nations.clear()
-                nations.addAll(Util.json.decodeFromString(ListSerializer(Nation.serializer()), stringData))
+                nations.addAll(JSON.decodeFromString(ListSerializer(Nation.serializer()), stringData))
             } catch (e: Exception) {
                 log.error("Failed to read Nations from file! \n {}", e.stackTrace)
             }

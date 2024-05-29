@@ -1,5 +1,10 @@
 package org.teamvoided.civilization.managers
 
+import arrow.core.Either
+import arrow.core.raise.catch
+import arrow.core.raise.either
+import arrow.core.raise.ensure
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.ListSerializer
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
@@ -14,12 +19,17 @@ import org.teamvoided.civilization.config.CivilizationConfig
 import org.teamvoided.civilization.data.BasicDirection
 import org.teamvoided.civilization.data.ResultType
 import org.teamvoided.civilization.data.Settlement
-import org.teamvoided.civilization.util.Util
+import org.teamvoided.civilization.data.SettlementNotFound
+import org.teamvoided.civilization.managers.PlayerDataManager.removeLeader
+import org.teamvoided.civilization.managers.PlayerDataManager.removesSettlement
+import org.teamvoided.civilization.managers.PlayerDataManager.setLeader
+import org.teamvoided.civilization.util.JSON
 import org.teamvoided.civilization.util.Util.getWorldPath
 import org.teamvoided.civilization.util.tText
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
+import java.io.IOException
 import java.util.*
 
 
@@ -27,8 +37,13 @@ import java.util.*
 object SettlementManager {
     private val settlements: MutableList<Settlement> = mutableListOf()
     private val invitesList: MutableMap<UUID, MutableList<UUID>> = mutableMapOf()   //Player - <Settlements>
-    private var canReadFiles: MutableList<Identifier> = mutableListOf() //World Identifier
+    private var canReadFiles = true //World Identifier
+
     fun postServerInit(server: MinecraftServer) {
+        loadAll(server)
+    }
+
+    fun loadAll(server: MinecraftServer) {
         for (world in server.worlds) load(server, world)
     }
 
@@ -36,10 +51,11 @@ object SettlementManager {
         for (world in server.worlds) save(server, world)
     }
 
-    @Suppress("unused")
     fun getById(id: UUID): Settlement? = settlements.find { it.id == id }
     fun getByName(name: String): Settlement? = settlements.find { it.nameId == name }
     fun getByChunkPos(pos: ChunkPos): Settlement? = settlements.find { it.getChunks().contains(pos) }
+
+    fun getName(id: UUID): String? = settlements.find { it.id == id }?.nameId
 
     fun getSettledChunks(): Map<ChunkPos, UUID> =
         settlements.flatMap { set -> set.getChunks().map { Pair(it, set.id) } }.toMap()
@@ -68,6 +84,12 @@ object SettlementManager {
         return Pair(ResultType.SUCCESS, tText("Successfully created a base!"))
     }
 
+    fun deleteSettlement(settlement: Settlement, server: MinecraftServer): Either<SettlementNotFound, Unit> = either {
+        settlement.getCitizens().forEach { (id, _) -> server.removesSettlement(id, settlement) }
+        ensure(settlements.remove(settlement)) { SettlementNotFound }
+        WebMaps.removeSettlement(settlement)
+    }
+
     fun removeSettlement(
         settlement: Settlement, player: ServerPlayerEntity, confirmed: Boolean
     ): Pair<ResultType, Text> {
@@ -81,7 +103,7 @@ object SettlementManager {
 
         settlements.remove(settlement)
         WebMaps.removeSettlement(settlement)
-        PlayerDataManager.clearD(player)
+        player.removesSettlement(settlement)
         return Pair(
             ResultType.SUCCESS,
             tText("Successfully delete a settlement %s!", settlement.name)
@@ -111,8 +133,9 @@ object SettlementManager {
         return Pair(ResultType.SUCCESS, tText("Chunk successfully removed!"))
     }
 
+    fun indexOf(settlement: Settlement): Int = settlements.indexOf(settlements.find { it.id == settlement.id }!!)
     fun updateSettlement(settlement: Settlement) {
-        settlements[settlements.indexOf(settlement)] = settlement
+        settlements[indexOf(settlement)] = settlement
         WebMaps.modifySettlement(settlement)
     }
 
@@ -183,21 +206,34 @@ object SettlementManager {
         return !CivilizationConfig.config().banedDimensions.contains(dim)
     }
 
+    // Is Synchronous - Only call this in a Thread
     fun save(server: MinecraftServer, world: World): Int {
         val id = world.registryKey.value
-        if (!canReadFiles.contains(id)) {
-            canReadFiles.add(id)
-            Thread {
-                try {
-                    FileWriter(getSettlementSaveFile(server, world)).use {
-                        it.write(Util.json.encodeToString(ListSerializer(Settlement.serializer()), settlements))
-                    }
-                    log.info("Successfully saved {} worlds Settlements!", id)
-                } catch (e: Exception) {
-                    log.error("Failed to save Settlements to file! \n {}", e.stackTrace)
+        if (canReadFiles) {
+            canReadFiles = false
+            catch({
+                val file = getSettlementSaveFile(server, world)
+                if (!file.exists()) {
+                    throw IOException("File doesn't exist!")
                 }
-                canReadFiles.remove(id)
-            }.start()
+                FileWriter(file).use {
+                    it.write(
+                        JSON.encodeToString(
+                            ListSerializer(Settlement.serializer()),
+                            settlements.filter { setl -> setl.dimension == id })
+                    )
+                }
+                log.info("Successfully saved {} worlds Settlements!", id)
+            }, {
+                val error = when (it) {
+                    is SerializationException -> "Failed to serialize!"
+                    is IOException -> "Failed to write to file!"
+                    else -> it.message ?: "bad"
+                }
+                log.error("$error : {}", it.stackTrace)
+
+            })
+            canReadFiles = true
         } else {
             log.warn("Tired to write Settlement files when couldn't!")
             return 0
@@ -206,20 +242,51 @@ object SettlementManager {
     }
 
     fun load(server: MinecraftServer, world: World): Int {
+        println()
+        println()
+        println()
         val id = world.registryKey.value
-        if (!canReadFiles.contains(id)) {
-            canReadFiles.add(id)
-            try {
-                val stringData = FileReader(getSettlementSaveFile(server, world)).use { it.readText() }
-                val otherDim = settlements.filter { it.dimension != id }
-                settlements.clear()
-                settlements.addAll(otherDim)
-                settlements.addAll(Util.json.decodeFromString(ListSerializer(Settlement.serializer()), stringData))
+        println(id)
+        if (canReadFiles) {
+            canReadFiles = false
+            println("Pre Load...")
+            println(getAllSettlement().map { it.name })
+            catch({
+                val file = getSettlementSaveFile(server, world)
+                if (!file.exists()) {
+                    file.mkdirs()
+                    throw IOException("File doesn't exist!")
+                }
+                println(file)
+                println(file.path)
+                val stringData = FileReader(file).use { it.readText() }
+                println("Data...")
+                println(stringData)
+                val settlements = JSON.decodeFromString(ListSerializer(Settlement.serializer()), stringData)
+                println("Proc Data...")
+                println(settlements.map { it.name + " " + it.dimension })
+                val otherDim = this.settlements.filter { it.dimension != id }
+                println("Other...")
+                println(otherDim.map { it.name + " " + it.dimension })
+                this.settlements.clear()
+                println(getAllSettlement().map { it.name })
+                this.settlements.addAll(otherDim + settlements)
                 log.info("Successfully read {} worlds Settlements!", id)
-            } catch (e: Exception) {
-                log.error("Failed to read Settlements from file! \n {}", e.stackTrace)
-            }
-            canReadFiles.remove(id)
+            }, {
+                val error = when (it) {
+                    is SerializationException -> "Failed to serialize, json invalid!"
+                    is IllegalArgumentException -> "Failed to serialize, input is not a settlement list!"
+                    is IOException -> "Failed to write to file!"
+                    else -> it.message ?: "bad"
+                }
+                log.error("$error : {}", it.stackTrace)
+            })
+            println("Post load...")
+            println(getAllSettlement().map { it.name })
+            canReadFiles = true
+            println()
+            println()
+            println()
         } else {
             log.warn("Tired to read Settlement files when couldn't!")
             return 0
@@ -230,4 +297,10 @@ object SettlementManager {
     private fun getSettlementSaveFile(server: MinecraftServer, world: World): File =
         getWorldPath(server, world).resolve("settlements.json").toFile()
 
+    fun setSettlementLeader(settlement: Settlement, newLeader: ServerPlayerEntity) {
+        val oldLeaderId = settlement.leader
+        updateSettlement(settlement.setLeader(newLeader))
+        newLeader.server.removeLeader(oldLeaderId, settlement)
+        newLeader.setLeader(settlement)
+    }
 }

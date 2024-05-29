@@ -17,15 +17,13 @@ import java.nio.file.Path
 object Util {
     val idRegex = Regex("[^\\w/\\\\._-]")
 
-    @OptIn(ExperimentalSerializationApi::class)
-    val json = Json { prettyPrint = true; prettyPrintIndent = "  " }
     fun formatId(string: String): String =
         string.lowercase().replace(idRegex, "_").replace(Regex("_{2,}"), "_")
 
     fun String.toWord(): String = this.lowercase().replaceFirstChar { it.titlecase() }
 
     fun getWorldPath(server: MinecraftServer, world: World): Path =
-        DimensionType.getSaveDirectory(world.registryKey, server.getSavePath(WorldSavePath.ROOT)).parent
+        DimensionType.getSaveDirectory(world.registryKey, server.getSavePath(WorldSavePath.ROOT))
             .resolve("data")
             .resolve(Civilization.MODID)
 
@@ -34,3 +32,5 @@ object Util {
 
     fun emptyResult(): Pair<ResultType, MutableText> = Pair(ResultType.SUCCESS, tText("Result!"))
 }
+
+val JSON = Json { prettyPrint = true; prettyPrintIndent = "  " }

@@ -28,7 +28,9 @@ class TextBuilder(private val connector: String = "") {
     fun add(bl: Boolean?) = text.add(bl(bl))
     fun add(num: Number?) = text.add(num(num))
     fun add(str: String?) = text.add(str(str))
-    fun addObjectRaw(name: String, init: TextBuilder.() -> Unit) = text.add(pair(name, buildText(init = init)))
+    fun addObjectRaw(init: TextBuilder.() -> Unit) =
+        text.add(text("{ ").append(buildText(", ", init)).append(text(" }")))
+
     fun addListRaw(init: TextBuilder.() -> Unit) =
         text.add(text("[ ").append(buildText(", ", init)).append(text(" ]")))
 

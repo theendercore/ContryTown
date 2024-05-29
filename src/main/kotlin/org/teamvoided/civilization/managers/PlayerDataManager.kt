@@ -3,8 +3,11 @@ package org.teamvoided.civilization.managers
 import eu.pb4.playerdata.api.PlayerDataApi
 import eu.pb4.playerdata.api.storage.JsonDataStorage
 import eu.pb4.playerdata.api.storage.PlayerDataStorage
+import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
 import org.teamvoided.civilization.data.Settlement
+import org.teamvoided.civilization.util.buildText
+import org.teamvoided.civilization.util.iface.Textable
 import java.util.*
 
 object PlayerDataManager {
@@ -12,6 +15,46 @@ object PlayerDataManager {
 
     fun init() {
         PlayerDataApi.register(PLAYER_DATA)
+    }
+
+    fun MinecraftServer.setLeader(id: UUID, settlement: Settlement) {
+        val data = this.getDataD(id)
+            ?.let { it.settlements[settlement.id] = Role.LEADER;it }
+            ?: PlayerData(settlement, Role.LEADER)
+        setDataD(id, data)
+    }
+
+    fun ServerPlayerEntity.setLeader(settlement: Settlement) {
+        val data = getDataD(this)
+            ?.let { it.settlements[settlement.id] = Role.LEADER;it }
+            ?: PlayerData(settlement, Role.LEADER)
+        setDataD(this, data)
+    }
+
+    fun MinecraftServer.removeLeader(id: UUID, settlement: Settlement) {
+        this.getDataD(id)?.let {
+            it.settlements[settlement.id] = Role.CITIZEN;
+            setDataD(id, it)
+        }
+    }
+
+    fun ServerPlayerEntity.removeLeader(settlement: Settlement) {
+        getDataD(this)?.let {
+            it.settlements[settlement.id] = Role.CITIZEN;
+            setDataD(this, it)
+        }
+    }
+    fun MinecraftServer.removesSettlement(id: UUID, settlement: Settlement) {
+        this.getDataD(id)?.let {
+            it.settlements.remove(settlement.id);
+            setDataD(id, it)
+        }
+    }
+    fun ServerPlayerEntity.removesSettlement( settlement: Settlement) {
+        getDataD(this)?.let {
+            it.settlements.remove(settlement.id);
+            setDataD(this, it)
+        }
     }
 
 
@@ -39,10 +82,36 @@ object PlayerDataManager {
     fun setDataD(player: ServerPlayerEntity, data: PlayerData) =
         PlayerDataApi.setCustomDataFor(player, PLAYER_DATA, data)
 
+    private fun MinecraftServer.getDataD(id: UUID): PlayerData? = PlayerDataApi.getCustomDataFor(this, id, PLAYER_DATA)
+    private fun MinecraftServer.setDataD(id: UUID, data: PlayerData) =
+        PlayerDataApi.setCustomDataFor(this, id, PLAYER_DATA, data)
 
     fun clearD(player: ServerPlayerEntity) = PlayerDataApi.setCustomDataFor(player, PLAYER_DATA, null)
 
-    data class PlayerData(val settlements: MutableMap<UUID, Role>, val nations: Map<UUID, Role>? = null)
+    data class PlayerData(val settlements: MutableMap<UUID, Role>, val nations: Map<UUID, Role>? = null) : Textable {
+        constructor(settlement: Settlement, role: Role) : this(mutableMapOf(settlement.id to role), null)
+
+        override fun toText() = buildText {
+            addList("settlements") {
+                settlements.forEach {
+                    addObjectRaw {
+                        add("id", SettlementManager.getName(it.key))
+                        add("role", it.value.toString())
+                    }
+                }
+            }
+            addList("nations") {
+                if (nations != null) {
+                    nations.forEach {
+                        addObjectRaw {
+                            add("id", NationManager.getName(it.key))
+                            add("role", it.value.toString())
+                        }
+                    }
+                } else add(null as String?)
+            }
+        }
+    }
 
     enum class Role { CITIZEN, COUNCIL_DELEGATE, LEADER }
 }
