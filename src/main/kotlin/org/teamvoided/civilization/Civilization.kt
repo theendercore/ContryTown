@@ -1,6 +1,8 @@
 package org.teamvoided.civilization
 
 
+import arrow.core.Either
+import arrow.core.raise.either
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.entity.LivingEntity
@@ -12,6 +14,7 @@ import net.minecraft.util.math.ChunkPos
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.teamvoided.civilization.compat.SquaremapIntegrations
+import org.teamvoided.civilization.data.ServerRefNotInitialized
 import org.teamvoided.civilization.events.LivingEntityMoveEvent
 import org.teamvoided.civilization.init.CivCommands
 import org.teamvoided.civilization.managers.PlayerDataManager
