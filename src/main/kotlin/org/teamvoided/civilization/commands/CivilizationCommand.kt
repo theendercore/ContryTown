@@ -4,9 +4,12 @@ import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.context.CommandContext
+import net.minecraft.command.argument.EntityArgumentType
+import net.minecraft.server.command.CommandManager.argument
 import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.world.World
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType
 import org.teamvoided.civilization.commands.argument.SettlementArgumentType.settlementArg
 import org.teamvoided.civilization.commands.permisions.Perms
@@ -87,6 +90,14 @@ object CivilizationCommand {
             .executes { setSettlementLeader(it, SettlementArgumentType.getSettlement(it), null) }
             .build()
             .childOf(setSettlementName)
+        val setSettlementLeaderName = argument("player", EntityArgumentType.player())
+            .executes {
+                setSettlementLeader(
+                    it, SettlementArgumentType.getSettlement(it), EntityArgumentType.getPlayer(it, "player")
+                )
+            }
+            .build()
+            .childOf(setSettlementLeader)
 
         dispatcher.register(literal("civ").redirect(civilizationNode))
     }
@@ -134,7 +145,7 @@ object CivilizationCommand {
     private fun tp(c: CommandContext<ServerCommandSource>, settlement: Settlement): Int =
         c.serverWorldPlayer { src, _, _, player ->
             player.teleport(settlement.center)
-            src.tFeedback(cmd("teleported", "to", "%s", settlement.name))
+            src.tFeedback(cmd("teleported", "to", "%s"), settlement.name)
             return@serverWorldPlayer 1
         }
 
@@ -144,10 +155,9 @@ object CivilizationCommand {
         val newLeader = leader ?: player
         ensureNotNull(newLeader) { SenderIsNotPlayerError }
         SettlementManager.setSettlementLeader(settlement, newLeader)
-        src.tFeedback(cmd("set", "leader", "to", "%s", newLeader.name.string))
+        src.tFeedback(cmd("set", "leader", "to", "%s"), newLeader.name.string)
         1
     }
-
 
     fun civ(vararg args: String): String = cmd("civilization", *args)
 }
