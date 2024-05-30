@@ -158,11 +158,11 @@ object SettlementManager {
         invitesList[player]?.add(settlement.id)
     }
 
-    fun removeInvite(player: UUID, settlement: Settlement): Int? {
+   /* fun removeInvite(player: UUID, settlement: Settlement): Int? {
         invitesList[player]?.remove(settlement.id) ?: return null
 
         return 1
-    }
+    }*/
 
     fun clearInvites(player: UUID) = invitesList.remove(player)
 
@@ -187,9 +187,7 @@ object SettlementManager {
         updateSettlement(settlement)
 
         val data = PlayerDataManager.getDataD(player) ?: return
-        println(data)
         data.settlements.remove(settlement.id)
-        println(data)
         PlayerDataManager.setDataD(player, data)
     }
 
@@ -242,34 +240,19 @@ object SettlementManager {
     }
 
     fun load(server: MinecraftServer, world: World): Int {
-        println()
-        println()
-        println()
         val id = world.registryKey.value
-        println(id)
         if (canReadFiles) {
             canReadFiles = false
-            println("Pre Load...")
-            println(getAllSettlement().map { it.name })
             catch({
                 val file = getSettlementSaveFile(server, world)
                 if (!file.exists()) {
                     file.mkdirs()
                     throw IOException("File doesn't exist!")
                 }
-                println(file)
-                println(file.path)
                 val stringData = FileReader(file).use { it.readText() }
-                println("Data...")
-                println(stringData)
                 val settlements = JSON.decodeFromString(ListSerializer(Settlement.serializer()), stringData)
-                println("Proc Data...")
-                println(settlements.map { it.name + " " + it.dimension })
                 val otherDim = this.settlements.filter { it.dimension != id }
-                println("Other...")
-                println(otherDim.map { it.name + " " + it.dimension })
                 this.settlements.clear()
-                println(getAllSettlement().map { it.name })
                 this.settlements.addAll(otherDim + settlements)
                 log.info("Successfully read {} worlds Settlements!", id)
             }, {
@@ -281,12 +264,7 @@ object SettlementManager {
                 }
                 log.error("$error : {}", it.stackTrace)
             })
-            println("Post load...")
-            println(getAllSettlement().map { it.name })
             canReadFiles = true
-            println()
-            println()
-            println()
         } else {
             log.warn("Tired to read Settlement files when couldn't!")
             return 0
