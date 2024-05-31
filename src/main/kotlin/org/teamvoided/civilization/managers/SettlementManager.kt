@@ -16,10 +16,7 @@ import net.minecraft.world.World
 import org.teamvoided.civilization.Civilization.log
 import org.teamvoided.civilization.compat.WebMaps
 import org.teamvoided.civilization.config.CivilizationConfig
-import org.teamvoided.civilization.data.BasicDirection
-import org.teamvoided.civilization.data.ResultType
-import org.teamvoided.civilization.data.Settlement
-import org.teamvoided.civilization.data.SettlementNotFound
+import org.teamvoided.civilization.data.*
 import org.teamvoided.civilization.managers.PlayerDataManager.removeLeader
 import org.teamvoided.civilization.managers.PlayerDataManager.removesSettlement
 import org.teamvoided.civilization.managers.PlayerDataManager.setLeader
@@ -43,12 +40,20 @@ object SettlementManager {
         loadAll(server)
     }
 
-    fun loadAll(server: MinecraftServer) {
-        for (world in server.worlds) load(server, world)
+    fun loadAll(server: MinecraftServer): FailedToLoad? {
+        for (world in server.worlds) {
+            val success = load(server, world)
+            if (success != 1) return FailedToLoad("settlements")
+        }
+        return null
     }
 
-    fun saveAll(server: MinecraftServer) {
-        for (world in server.worlds) save(server, world)
+    fun saveAll(server: MinecraftServer): FailedToSave? {
+        for (world in server.worlds) {
+            val success = save(server, world)
+            if (success != 1) return FailedToSave("settlements")
+        }
+        return null
     }
 
     fun getById(id: UUID): Settlement? = settlements.find { it.id == id }
@@ -78,7 +83,7 @@ object SettlementManager {
         settlements.add(newSet)
 
         PlayerDataManager.setDataD(
-            player, PlayerDataManager.PlayerData(mutableMapOf(Pair(newSet.id, PlayerDataManager.Role.LEADER)))
+            player, PlayerDataManager.PlayerData(mutableMapOf(Pair(newSet.id, PlayerDataManager.SettlementRole.LEADER)))
         )
         WebMaps.addSettlement(newSet)
         return Pair(ResultType.SUCCESS, tText("Successfully created a base!"))
@@ -158,11 +163,11 @@ object SettlementManager {
         invitesList[player]?.add(settlement.id)
     }
 
-   /* fun removeInvite(player: UUID, settlement: Settlement): Int? {
-        invitesList[player]?.remove(settlement.id) ?: return null
+    /* fun removeInvite(player: UUID, settlement: Settlement): Int? {
+         invitesList[player]?.remove(settlement.id) ?: return null
 
-        return 1
-    }*/
+         return 1
+     }*/
 
     fun clearInvites(player: UUID) = invitesList.remove(player)
 
@@ -174,9 +179,16 @@ object SettlementManager {
         PlayerDataManager.setDataD(
             player,
             if (data == null)
-                PlayerDataManager.PlayerData(mutableMapOf(Pair(settlement.id, PlayerDataManager.Role.CITIZEN)))
+                PlayerDataManager.PlayerData(
+                    mutableMapOf(
+                        Pair(
+                            settlement.id,
+                            PlayerDataManager.SettlementRole.CITIZEN
+                        )
+                    )
+                )
             else {
-                data.settlements[settlement.id] = PlayerDataManager.Role.CITIZEN
+                data.settlements[settlement.id] = PlayerDataManager.SettlementRole.CITIZEN
                 data
             }
         )

@@ -37,11 +37,12 @@ object NationManager {
     fun addNation(name: String, player: ServerPlayerEntity): Pair<ResultType, Text> {
         val leader = player.uuid
         val data = PlayerDataManager.getDataD(player)
+
         if (data == null) return Pair(
             ResultType.FAIL,
             tText("You are not in a settlement you cant crete a nation one!")
         )
-        if (!data.settlements.containsValue(PlayerDataManager.Role.LEADER)) return Pair(
+        if (!data.settlements.containsValue(PlayerDataManager.SettlementRole.LEADER)) return Pair(
             ResultType.FAIL,
             tText("You are not in a settlement leader you cant crete a nation!")
         )
@@ -49,7 +50,7 @@ object NationManager {
             ResultType.FAIL, tText("You are in a settlement you cant crete a new one!")
         )
         val settlement =
-            SettlementManager.getById(data.settlements.filterValues { it == PlayerDataManager.Role.LEADER }.keys.first())
+            SettlementManager.getById(data.settlements.filterValues { it == PlayerDataManager.SettlementRole.LEADER }.keys.first())
         if (settlement == null) throw Error("[NationManager:addNation] Settlement not found but player has settlement data!")
 
         val newNation = Nation(name, settlement, leader)
@@ -61,7 +62,7 @@ object NationManager {
 
         PlayerDataManager.setDataD(
             player,
-            PlayerDataManager.PlayerData(data.settlements, mapOf(Pair(newNation.id, PlayerDataManager.Role.LEADER)))
+            PlayerDataManager.PlayerData(data.settlements, mapOf(Pair(newNation.id, PlayerDataManager.NationRole.LEADER)))
         )
         WebMaps.addNation(newNation)
         return Pair(ResultType.SUCCESS, tText("Successfully created a nation!"))

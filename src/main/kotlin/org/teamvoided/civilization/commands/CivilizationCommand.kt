@@ -4,6 +4,7 @@ import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.context.CommandContext
+import net.minecraft.command.argument.DimensionArgumentType
 import net.minecraft.command.argument.EntityArgumentType
 import net.minecraft.server.command.CommandManager.argument
 import net.minecraft.server.command.CommandManager.literal
@@ -39,18 +40,31 @@ object CivilizationCommand {
             .build()
             .childOf(civilizationNode)
 
+        val loadOnly = literal("load_only")
+            .requires(Perms.CIV_LOAD_ONLY.require(4))
+            .executes { loadOnly(it, null) }
+            .build()
+            .childOf(civilizationNode)
+        val loadOnlyWorld = argument("name", DimensionArgumentType.dimension())
+            .executes { loadOnly(it, DimensionArgumentType.getDimensionArgument(it, "name")) }
+            .build()
+            .childOf(loadOnly)
+
         val save = literal("save")
             .requires(Perms.CIV_SAVE.require(4))
             .executes(::save)
             .build()
             .childOf(civilizationNode)
 
-        val saveAll = literal("save_all")
-            .requires(Perms.CIV_SAVE_ALL.require(4))
-            .executes(::saveAll)
+        val saveOnly = literal("save_only")
+            .requires(Perms.CIV_SAVE_ONLY.require(4))
+            .executes { saveOnly(it, null) }
             .build()
             .childOf(civilizationNode)
-
+        val saveOnlyWorld = argument("name", DimensionArgumentType.dimension())
+            .executes { saveOnly(it, DimensionArgumentType.getDimensionArgument(it, "name")) }
+            .build()
+            .childOf(saveOnly)
 
         val tp = literal("tp")
             .requires(Perms.CIV_TP.require(2))
@@ -110,35 +124,40 @@ object CivilizationCommand {
             1
         }
 
-    private fun load(c: CommandContext<ServerCommandSource>): Int = c.serverWorld { src, server, world ->
-        val t1 = SettlementManager.load(server, world)
-        ensure(t1 >= 1) { FailedToLoad("settlement") }
-        val t2 = NationManager.load()
-        ensure(t2 >= 1) { FailedToLoad("nation") }
+    private fun load(c: CommandContext<ServerCommandSource>): Int = c.serverWorld { src, server, _ ->
+        SettlementManager.loadAll(server)?.let { raise(it) }
+        val natLoad = NationManager.load()
+        ensure(natLoad >= 1) { FailedToLoad("nation") }
 
         src.tFeedback(cmd("load", "success"))
         1
     }
 
-    private fun save(c: CommandContext<ServerCommandSource>): Int = c.serverWorld { src, server, world ->
-        val t1 = SettlementManager.save(server, world)
-        ensure(t1 >= 1) { FailedToSave("settlement") }
-        val t2 = NationManager.save()
-        ensure(t2 >= 1) { FailedToSave("nation") }
+    private fun loadOnly(c: CommandContext<ServerCommandSource>, nWorld: World?): Int =
+        c.serverWorld { src, server, activationWorld ->
+            val world = nWorld ?: activationWorld
+            val setlLoad = SettlementManager.load(server, world)
+            ensure(setlLoad >= 1) { FailedToLoad("settlement") }
+
+            src.tFeedback(cmd("load", "only", "success", "%s"), world.registryKey.value)
+            1
+        }
+
+    private fun save(c: CommandContext<ServerCommandSource>): Int = c.serverWorld { src, server, _ ->
+         SettlementManager.saveAll(server)?.let { raise(it) }
+        val natLoad = NationManager.save()
+        ensure(natLoad >= 1) { FailedToSave("nation") }
 
         src.tFeedback(cmd("save", "success"))
         1
     }
 
-    private fun loadAll(c: CommandContext<ServerCommandSource>): Int = c.serverWorld { src, server, world ->
-        SettlementManager.loadAll(server)
-        src.tFeedback(cmd("load", "all", "success"))
-        1
-    }
+    private fun saveOnly(c: CommandContext<ServerCommandSource>, nWorld: World?): Int = c.serverWorld { src, server, activationWorld ->
+        val world = nWorld ?: activationWorld
+        val t1 = SettlementManager.save(server, world)
+        ensure(t1 >= 1) { FailedToSave("settlement") }
 
-    private fun saveAll(c: CommandContext<ServerCommandSource>): Int = c.serverWorld { src, server, _ ->
-        SettlementManager.saveAll(server)
-        src.tFeedback(cmd("save", "all", "success"))
+        src.tFeedback(cmd("save", "only", "success", "%s"), world.registryKey.value)
         1
     }
 

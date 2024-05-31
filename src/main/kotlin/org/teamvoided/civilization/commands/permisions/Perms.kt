@@ -11,7 +11,9 @@ object Perms {
 
     val CIV_LOAD = civilization("load")
     val CIV_SAVE = civilization("save")
-    val CIV_SAVE_ALL = civilization("save_all")
+
+    val CIV_LOAD_ONLY = civilization("load_only")
+    val CIV_SAVE_ONLY = civilization("save_only")
 
     val CIV_TP = civilization("tp")
     val CIV_SET = civilization("set")

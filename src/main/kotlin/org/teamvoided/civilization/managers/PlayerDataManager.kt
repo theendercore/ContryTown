@@ -17,40 +17,48 @@ object PlayerDataManager {
         PlayerDataApi.register(PLAYER_DATA)
     }
 
+    fun MinecraftServer.validatePlayerData(player: ServerPlayerEntity) {
+        val data = getDataD(player) ?: return
+        //check if data is valid
+        println("Validating Player Data $data")
+    }
+
     fun MinecraftServer.setLeader(id: UUID, settlement: Settlement) {
         val data = this.getDataD(id)
-            ?.let { it.settlements[settlement.id] = Role.LEADER;it }
-            ?: PlayerData(settlement, Role.LEADER)
+            ?.let { it.settlements[settlement.id] = SettlementRole.LEADER;it }
+            ?: PlayerData(settlement, SettlementRole.LEADER)
         setDataD(id, data)
     }
 
     fun ServerPlayerEntity.setLeader(settlement: Settlement) {
         val data = getDataD(this)
-            ?.let { it.settlements[settlement.id] = Role.LEADER;it }
-            ?: PlayerData(settlement, Role.LEADER)
+            ?.let { it.settlements[settlement.id] = SettlementRole.LEADER;it }
+            ?: PlayerData(settlement, SettlementRole.LEADER)
         setDataD(this, data)
     }
 
     fun MinecraftServer.removeLeader(id: UUID, settlement: Settlement) {
         this.getDataD(id)?.let {
-            it.settlements[settlement.id] = Role.CITIZEN
+            it.settlements[settlement.id] = SettlementRole.CITIZEN
             setDataD(id, it)
         }
     }
 
     fun ServerPlayerEntity.removeLeader(settlement: Settlement) {
         getDataD(this)?.let {
-            it.settlements[settlement.id] = Role.CITIZEN
+            it.settlements[settlement.id] = SettlementRole.CITIZEN
             setDataD(this, it)
         }
     }
+
     fun MinecraftServer.removesSettlement(id: UUID, settlement: Settlement) {
         this.getDataD(id)?.let {
             it.settlements.remove(settlement.id)
             setDataD(id, it)
         }
     }
-    fun ServerPlayerEntity.removesSettlement( settlement: Settlement) {
+
+    fun ServerPlayerEntity.removesSettlement(settlement: Settlement) {
         getDataD(this)?.let {
             it.settlements.remove(settlement.id)
             setDataD(this, it)
@@ -58,7 +66,7 @@ object PlayerDataManager {
     }
 
 
-    fun ServerPlayerEntity.getSettlements(role: Role = Role.LEADER): List<Settlement>? {
+    fun ServerPlayerEntity.getSettlements(role: SettlementRole = SettlementRole.LEADER): List<Settlement>? {
         val data = getDataD(this) ?: return null
         val settlement =
             data.settlements.filterValues { it == role }.keys.mapNotNull { SettlementManager.getById(it) }
@@ -73,7 +81,7 @@ object PlayerDataManager {
         return settlement.isNotEmpty()
     }
 
-    fun ServerPlayerEntity.getRole(setl: Settlement): Role? {
+    fun ServerPlayerEntity.getRole(setl: Settlement): SettlementRole? {
         return getDataD(this)?.settlements?.get(setl.id)
     }
 
@@ -88,8 +96,8 @@ object PlayerDataManager {
 
     fun clearD(player: ServerPlayerEntity) = PlayerDataApi.setCustomDataFor(player, PLAYER_DATA, null)
 
-    data class PlayerData(val settlements: MutableMap<UUID, Role>, val nations: Map<UUID, Role>? = null) : Textable {
-        constructor(settlement: Settlement, role: Role) : this(mutableMapOf(settlement.id to role), null)
+    data class PlayerData(val settlements: MutableMap<UUID, SettlementRole>, val nations: Map<UUID, NationRole>? = null) : Textable {
+        constructor(settlement: Settlement, role: SettlementRole) : this(mutableMapOf(settlement.id to role), null)
 
         override fun toText() = buildText {
             addList("settlements") {
@@ -113,5 +121,6 @@ object PlayerDataManager {
         }
     }
 
-    enum class Role { CITIZEN, COUNCIL_DELEGATE, LEADER }
+    enum class SettlementRole { CITIZEN,  LEADER }
+    enum class NationRole { CITIZEN, COUNCIL_DELEGATE, LEADER }
 }

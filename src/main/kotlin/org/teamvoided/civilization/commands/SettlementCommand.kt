@@ -278,7 +278,7 @@ object SettlementCommand {
         val role = player.getRole(setl)
             ?: return src.endMsg("You are not in a part of %s settlement!", setl.nameId)
 
-        if (role == PlayerDataManager.Role.LEADER)
+        if (role == PlayerDataManager.SettlementRole.LEADER)
             return src.endMsg("You are the leader of the settlement! You cant leave! Run /settlement delete if you want to delete your settlement.")
 
         SettlementManager.removeCitizen(player, setl)

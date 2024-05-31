@@ -1,23 +1,24 @@
 package org.teamvoided.civilization
 
 
-import arrow.core.Either
-import arrow.core.raise.either
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
+import net.fabricmc.fabric.api.networking.v1.PacketSender
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.server.MinecraftServer
+import net.minecraft.server.network.ServerPlayNetworkHandler
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.teamvoided.civilization.compat.SquaremapIntegrations
-import org.teamvoided.civilization.data.ServerRefNotInitialized
 import org.teamvoided.civilization.events.LivingEntityMoveEvent
 import org.teamvoided.civilization.init.CivCommands
 import org.teamvoided.civilization.managers.PlayerDataManager
+import org.teamvoided.civilization.managers.PlayerDataManager.validatePlayerData
 import org.teamvoided.civilization.managers.SettlementManager
 import org.teamvoided.civilization.util.Util
 import org.teamvoided.civilization.util.tText
@@ -41,8 +42,13 @@ object Civilization {
         PlayerDataManager.init()
         ServerLifecycleEvents.SERVER_STARTING.register(::beforeServerLoads)
         ServerLifecycleEvents.SERVER_STARTED.register(::afterServerLoads)
+        ServerPlayConnectionEvents.JOIN.register(::onPlayerJoin)
         LivingEntityMoveEvent.EVENT.register(::playerChangeChunk)
 
+    }
+
+    private fun onPlayerJoin(handler: ServerPlayNetworkHandler, ignore: PacketSender, server: MinecraftServer) {
+        server.validatePlayerData(handler.player)
     }
 
     private fun playerChangeChunk(last: BlockPos?, pos: BlockPos, entity: LivingEntity) {
