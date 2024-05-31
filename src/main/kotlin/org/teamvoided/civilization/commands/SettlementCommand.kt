@@ -24,7 +24,7 @@ import org.teamvoided.civilization.config.CivilizationConfig
 import org.teamvoided.civilization.data.ResultType
 import org.teamvoided.civilization.data.Settlement
 import org.teamvoided.civilization.managers.PlayerDataManager
-import org.teamvoided.civilization.managers.PlayerDataManager.getRole
+import org.teamvoided.civilization.managers.PlayerDataManager.getRoleOld
 import org.teamvoided.civilization.managers.PlayerDataManager.getSettlements
 import org.teamvoided.civilization.managers.SettlementManager
 import org.teamvoided.civilization.util.lText
@@ -275,7 +275,7 @@ object SettlementCommand {
         val setl = settlement ?: player.getSettlements()?.first()
         if (setl == null) return src.notInSettlement()
 
-        val role = player.getRole(setl)
+        val role = player.getRoleOld(setl)
             ?: return src.endMsg("You are not in a part of %s settlement!", setl.nameId)
 
         if (role == PlayerDataManager.SettlementRole.LEADER)
